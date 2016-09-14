@@ -1,0 +1,11 @@
+{{#partial userSearchTemplate}}
+  <rv-require
+    name="members-member-item"
+    src="/public/members/members-member-item"
+
+    data-bindparent-member="entities.{{@index}}"
+    data-template="complete"
+    data-index="{{@index}}"
+    data-on-click="click"
+  ></rv-require>
+{{/partial}}

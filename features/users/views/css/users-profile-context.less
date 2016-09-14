@@ -1,0 +1,280 @@
+@import "web";
+
+.users-profile-context {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+
+  &.hide {
+    opacity: 0;
+    .transform(translateX(-100%));
+    .transition(all 0.35s @easeOutQuart);
+  }
+
+  a, a:hover, a:visited, a:focus {
+    color: @accentColor;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  .users-profile-context-avatar {
+    height: 20rem;
+    background-color: @accentColor;
+    background-position: 50%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    overflow: hidden;
+
+    h1 {
+      position: absolute;
+      left: 2rem;
+      right: 6rem;
+      bottom: 1rem;
+      color: white;
+      font-size: 4rem;
+      text-shadow: 1px 1px black;
+      line-height: 4rem;
+      margin: 0;
+
+      a, a:hover, a:focus {
+        color: white;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .users-profile-context-avatar-upload {
+    position: absolute;
+    left: 0;
+    bottom: -100%;
+    height: 100%;
+    width: 100%;
+    background: #333;
+    color: white;
+    .transition(all 0.35s @easeOutQuart);
+
+    &.opened {
+      bottom: 0;
+    }
+
+    .dropzone {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: 0;
+      background: transparent;
+      border: none;
+
+      &.dz-clickable .dz-message {
+        margin-top: 66px;
+        color: white;
+      }
+
+      .dz-preview {
+        position: absolute;
+        left: 50%;
+        margin-left: -6rem;
+        margin-top: 2rem;
+        background: #333;
+      }
+
+      .dz-preview.dz-error .dz-error-mark,
+      .dz-preview.dz-success .dz-success-mark {
+        color: white;
+        font-size: 4rem;
+        padding: 10px;
+        border-radius: 50%;
+        width: 6rem;
+        height: 6rem;
+        text-align: center;
+        line-height: 1.1;
+      }
+
+      .dz-preview.dz-success .dz-success-mark {
+        background: rgba(76, 175, 80, 0.8);
+      }
+
+      .dz-preview.dz-error .dz-error-mark {
+        background: rgba(255, 102, 0, 0.8);
+      }
+    }
+  }
+
+  .users-profile-context-details {
+    background: white;
+    padding: 1rem 2rem;
+    height: 3rem;
+
+    .users-profile-context-links {
+      button {
+        cursor: pointer;
+        height: auto;
+        margin: 1rem 0 0;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: @accentColor;
+        text-transform: none;
+        font-weight: 300;
+        font-size: 1.6rem;
+        line-height: 1.2;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  .users-profile-context-close {
+    .noselect(pointer);
+    display: block;
+    position: absolute;
+    top: 6rem;
+    right: 2rem;
+    width: 4rem;
+    height: 4rem;
+    border: none;
+    padding: 0;
+    margin: 0;
+
+    &::before, &::after {
+      content: ' ';
+      position: absolute;
+      top: 2rem;
+      left: 0;
+      background: #333;
+      box-shadow: 1px 1px white;
+      width: 4rem;
+      height: 1px;
+      opacity: 0.6;
+      .transition(all 0.35s @easeOutQuart);
+    }
+  }
+
+  .users-profile-context-camera {
+    .noselect(pointer);
+    position: absolute;
+    color: white;
+    text-shadow: 1px 1px #333;
+    font-size: 3rem;
+    bottom: 1rem;
+    right: 2.3rem;
+    opacity: 0.3;
+    .transition(all 0.35s @easeOutQuart);
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .users-profile-context-notifications-title {
+    position: relative;
+    background: white;
+    color: #333;
+    padding: 1rem 2rem;
+
+    h2 {
+      font-weight: 400;
+      text-transform: uppercase;
+      font-size: 1.8rem;
+      margin: 0;
+      padding: 0;
+    }
+
+    rv-require {
+      position: absolute;
+      top: 0.9rem;
+      right: 2rem;
+    }
+
+    .pushs-disabled {
+      display: none;
+    }
+
+    .users-profile-context-notifications-button {
+      margin: 1rem 0 0;
+      padding: 0.5rem 1rem;
+      line-height: 1;
+      height: auto;
+
+      &.disabled {
+        cursor: default;
+        opacity: 0.5;
+
+        &:hover, &:focus {
+          color: #555;
+          border-color: #bbb;
+        }
+      }
+    }
+  }
+
+  .users-profile-context-notifications {
+    position: absolute;
+    top: 32.5rem;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    .pl-notifications-panel .pl-notifications-panel-item {
+      p strong {
+        font-weight: 500;
+        color: #F1D0BB;
+      }
+
+      &.pl-notifications-panel-noitem {
+        padding: 2rem;
+      }
+    }
+  }
+}
+
+.pl-context-panel.usable .users-profile-context-close {
+  &::before {
+    .transform(rotate(45deg));
+  }
+  &::after {
+    .transform(rotate(-45deg));
+  }
+}
+
+.users-profile-context-bye {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  box-sizing: border-box;
+  width: 100%;
+  .transform(translateY(-50%));
+
+  .pl-message {
+    text-align: center;
+    font-size: 3rem;
+    color: white;
+
+    .word {
+      margin-left: 1rem;
+    }
+
+    strong {
+      color: @accentColor;
+    }
+  }
+
+  &.show {
+    display: block;
+  }
+}

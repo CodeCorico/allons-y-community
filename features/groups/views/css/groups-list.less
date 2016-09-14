@@ -1,0 +1,35 @@
+.groups-list {
+  position: relative;
+  overflow: hidden;
+
+  &.groups-list-table {
+    display: flex;
+    flex-flow: row wrap;
+
+    [name="groups-group-item"] {
+      flex: 0 0 auto;
+    }
+  }
+}
+
+.media-tablet {
+
+  .groups-list {
+    &.groups-list-table {
+      [name="groups-group-item"] {
+        width: 50% !important;
+      }
+    }
+  }
+}
+
+.media-mobile {
+
+  .groups-list {
+    &.groups-list-table {
+      [name="groups-group-item"] {
+        width: 100% !important;
+      }
+    }
+  }
+}

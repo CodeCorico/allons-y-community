@@ -1,0 +1,24 @@
+<section
+  class="
+    members-list
+    {{template ? 'members-list-' + template : ''}}
+  "
+>
+  {{#members}}
+    <rv-require
+      name="members-member-item"
+      src="/public/members/members-member-item"
+
+      data-bind-cls="itemcls"
+      data-bindparent-member="members.{{@index}}"
+      data-bindparent-notransition="notransition"
+      data-bindparent-template="template"
+      data-index="{{@index}}"
+      data-on-click="click"
+    ></rv-require>
+  {{/members}}
+
+  {{#if members && members.length < total && (!nomore || nomore != 'true')}}
+    <div class="members-list-more">+{{total - members.length}}</div>
+  {{/if}}
+</section>

@@ -1,0 +1,24 @@
+<section
+  class="
+    groups-list
+    {{tablecols ? 'groups-list-table' : ''}}
+    {{template ? 'groups-list-' + template : ''}}
+  "
+>
+  {{#groups}}
+    <rv-require
+      name="groups-group-item"
+      src="/public/groups/groups-group-item"
+      style="{{tablecols ? 'width: ' + (100 / tablecols) + '%;' : ''}}"
+
+      data-bind-cls="itemcls"
+      data-bindparent-group="groups.{{@index}}"
+      data-bindparent-template="template"
+      data-bindparent-memberid="memberid"
+      data-bindparent-notransition="notransition"
+      data-index="{{@index}}"
+      data-on-click="click"
+    ></rv-require>
+  {{/groups}}
+
+</section>

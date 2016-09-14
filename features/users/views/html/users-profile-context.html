@@ -1,0 +1,64 @@
+<div class="users-profile-context {{hide ? 'hide' : ''}}">
+
+  <section class="pl-section users-profile-context-avatar" style="background-image: url('{{displayAvatar(user.avatarThumb)}}');">
+    <h1><a href="/members/{{user.url}}">{{user.username}}</a></h1>
+
+    <button class="users-profile-context-close" on-click="close"></button>
+
+    <div class="users-profile-context-avatar-upload {{changeAvatarOpened ? 'opened' : ''}}">
+      <form action="/upload" class="dropzone">
+        <div class="dz-message">
+          {{_('Drop a picture here or click to upload.')}}
+        </div>
+      </form>
+    </div>
+
+    <i class="users-profile-context-camera fa fa-camera" on-click="toggleChangeAvatar"></i>
+  </section>
+
+  <section class="pl-section users-profile-context-details">
+    <div class="users-profile-context-links">
+      <button on-click="signout">signout</button>
+    </div>
+  </section>
+
+  <div class="pl-section users-profile-context-notifications-title">
+    <h2>{{_('Notifications')}}</h2>
+
+    <rv-require
+      name="pl-button-onoff"
+      class="{{!pushNotificationsEnabled ? 'pushs-disabled' : ''}}"
+      src="/public/vendor/plumes/buttons/pl-button-onoff"
+      data-text-label="{{_('push notifications')}}"
+      data-bind-on="pushnotificationson"
+      data-bind-toggle="pushnotificationstoggle"
+    ></rv-require>
+
+    <button
+      class="users-profile-context-notifications-button {{allNotificationsRead ? 'disabled' : ''}}"
+      on-click="markNotificationsRead"
+    >{{_('mark all as read')}}</button>
+  </div>
+
+  <div class="pl-section users-profile-context-notifications">
+
+    <rv-require
+      name="pl-notifications-panel"
+      src="/public/vendor/plumes/notifications-panel/pl-notifications-panel"
+      data-dark="true"
+      data-use-emails="false"
+      data-bind-openitem="openItem"
+      data-bind-buttonaction="buttonAction"
+    ></rv-require>
+
+  </div>
+
+</div>
+
+<section class="users-profile-context-bye {{hide ? 'show' : ''}}">
+  <rv-require
+    name="pl-messages-message"
+    src="/public/vendor/plumes/messages/pl-messages-message"
+    ondemand="pl-messages-message"
+  ></rv-require>
+</section>

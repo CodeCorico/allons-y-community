@@ -1,0 +1,89 @@
+<div class="members-layout {{hasData ? 'opened' : ''}} {{exit ? 'closed' : ''}} {{sb}}">
+  <rv-require name="pl-scrolls" src="/public/vendor/plumes/scrolls/pl-scrolls"></rv-require>
+
+  <div class="pl-scrolls">
+
+    <div class="row">
+      <div class="four columns">
+        <h1><span>{{member.username}}</span></h1>
+        {{#if oldmember}}
+          <h1 class="prev"><span>{{oldmember.username}}</span></h1>
+        {{/if}}
+
+        <div
+          class="members-layout-profile-avatar"
+          style="background-image: url('{{displayAvatar(member.avatarThumb)}}');"
+        ></div>
+        {{#if oldmember}}
+          <div
+            class="members-layout-profile-avatar prev"
+            style="background-image: url('{{displayAvatar(oldmember.avatarThumb)}}');"
+          ></div>
+        {{/if}}
+
+        <!--<h2 class="members-layout-title">{{(coworkersTotal || 0) + ' ' + _(coworkersTotal > 1 ? 'Coworkers' : 'Coworker')}}</h2>
+
+        <div class="members-layout-coworkers">
+           <rv-require
+            name="members-list"
+            src="/public/members/members-list"
+
+            data-type="coworkers"
+            data-count="all"
+            data-notransition="true"
+            data-bindparent-memberid="member.id"
+            data-bindchild-total="coworkersTotal"
+            data-on-click="coworkerClick"
+            data-on-membersloaded="coworkersLoaded"
+          ></rv-require>
+
+          <div class="clear"></div>
+        </div>-->
+      </div>
+
+      <div class="eight columns">
+        <h2 class="members-layout-title top">{{(groupsTotal || 0) + ' ' + _(groupsTotal > 1 ? 'Groups' : 'Group')}}</h2>
+
+        <div class="members-layout-groups">
+          <rv-require
+            name="groups-list"
+            src="/public/groups/groups-list"
+
+            data-type="member"
+            data-tablecols="4"
+            data-notransition="true"
+            data-count="all"
+            data-bindparent-memberid="member.id"
+            data-bindchild-total="groupsTotal"
+            data-on-click="groupClick"
+            data-on-groupsloaded="groupsLoaded"
+          ></rv-require>
+
+          <div class="clear"></div>
+        </div>
+
+        <!-- <h2 class="members-layout-title">{{(contributionsTotal || 0) + ' ' + _(contributionsTotal > 1 ? 'Contributions' : 'Contribution')}}</h2>
+
+        <div class="members-layout-contributions">
+          <rv-require
+            name="wiki-posts-list"
+            src="/public/wiki/wiki-posts-list"
+            class="members-layout-contribution"
+
+            data-type="contributions"
+            data-tablecols="2"
+            data-notransition="true"
+            data-count="all"
+            data-bindparent-userid="member.id"
+            data-bindchild-total="contributionsTotal"
+            data-on-click="contributionClick"
+            data-on-postsloaded="contributionsLoaded"
+          ></rv-require>
+
+          <div class="clear"></div>
+        </div> -->
+      </div>
+    </div>
+
+  </div>
+</div>

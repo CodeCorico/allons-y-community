@@ -1,0 +1,215 @@
+<div class="groups-group">
+  <rv-require name="pl-scrolls" src="/public/vendor/plumes/scrolls/pl-scrolls"></rv-require>
+
+  <div class="pl-scrolls">
+
+    <div class="header-bg" style="background-image: url('{{displayCover(group.coverLarge)}}');"></div>
+
+    <header>
+      <div class="row">
+        <div class="six columns">
+          <h1>{{group.name}}</h1>
+          <p>{{group.description}}</p>
+        </div>
+        <div class="six columns">
+          {{#if leadersTotal || group.activeUserCanInvitLeaders}}
+            <h3>{{_('Leaders')}}</h3>
+          {{/if}}
+
+          <div class="groups-group-members">
+            <rv-require
+              name="members-list"
+              src="/public/members/members-list"
+
+              data-type="groupleaders"
+              data-template="thumbnail"
+              data-count="5"
+              data-notransition="true"
+              data-bindparent-groupid="group.id"
+              data-bindchild-total="leadersTotal"
+              data-on-click="memberClick"
+            ></rv-require>
+
+            <div class="clear"></div>
+          </div>
+
+          <div class="clear"></div>
+
+          {{#if group.activeUserCanInvitLeaders}}
+            <rv-require
+              name="pl-autocomplete"
+              src="/public/vendor/plumes/autocomplete/pl-autocomplete"
+              class="groups-group-invit-autocomplete-container"
+
+              data-is="leader"
+
+              data-listposition="bottom"
+              data-autoselection="false"
+              data-placeholder="{{_('Invite new leaders...')}}"
+              data-cls="groups-group-invit-autocomplete"
+              data-selectioncls="groups-group-invit-autocomplete-selection"
+              data-inputcls="groups-group-invit-autocomplete-input"
+              data-listcls="groups-group-invit-autocomplete-list"
+              data-bind-focus="invitFocus"
+              data-bind-change="invitChange"
+              data-bind-select="invitSelect"
+            ></rv-require>
+
+            <div class="clear"></div>
+          {{/if}}
+
+          {{#if membersTotal || group.activeUserCanInvitMembers}}
+            <h3>{{_(group.special == 'deactivated' ? 'Deactivated' : 'Members')}}</h3>
+          {{/if}}
+
+          <div class="groups-group-members">
+            <rv-require
+              name="members-list"
+              src="/public/members/members-list"
+
+              data-type="groupmembers"
+              data-template="thumbnail"
+              data-count="5"
+              data-notransition="true"
+              data-bindparent-groupid="group.id"
+              data-bindchild-total="membersTotal"
+              data-on-click="memberClick"
+            ></rv-require>
+
+            <div class="clear"></div>
+          </div>
+
+          <div class="clear"></div>
+
+          {{#if group.activeUserCanInvitMembers}}
+            <rv-require
+              name="pl-autocomplete"
+              src="/public/vendor/plumes/autocomplete/pl-autocomplete"
+              class="groups-group-invit-autocomplete-container"
+
+              data-is="member"
+
+              data-listposition="bottom"
+              data-autoselection="false"
+              data-placeholder="{{_(group.special == 'deactivated' ? 'Deactivate members...' : 'Invite new members...')}}"
+              data-cls="groups-group-invit-autocomplete"
+              data-selectioncls="groups-group-invit-autocomplete-selection"
+              data-inputcls="groups-group-invit-autocomplete-input"
+              data-listcls="groups-group-invit-autocomplete-list"
+              data-bind-focus="invitFocus"
+              data-bind-change="invitChange"
+              data-bind-select="invitSelect"
+            ></rv-require>
+
+            <div class="clear"></div>
+          {{/if}}
+
+          {{#if invitationsTotal}}
+            <h3>Invitations</h3>
+          {{/if}}
+
+          <div class="groups-group-members">
+            <rv-require
+              name="members-list"
+              src="/public/members/members-list"
+
+              data-type="groupinvitations"
+              data-template="thumbnail"
+              data-count="5"
+              data-notransition="true"
+              data-bindparent-groupid="group.id"
+              data-bindchild-total="invitationsTotal"
+              data-on-click="memberClick"
+            ></rv-require>
+
+            <div class="clear"></div>
+          </div>
+
+          <div class="clear"></div>
+        </div>
+      </div>
+    </header>
+
+    {{#if group.permissions.length}}
+    <section class="groups-group-body">
+      <div class="row">
+        <div class="four columns">
+          <div class="groups-group-widget">
+            {{_('Permissions')}}
+            <ul>
+              {{#group.permissions}}
+              <li>{{.}}</li>
+              {{/group.permissions}}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+    {{/if}}
+
+    <!-- <section class="groups-group-body">
+      <h2>Last modified contributions</h2>
+
+      <a class="groups-group-post show" style="background-image: url('/media/2737a010-1bbb-11e6-9e15-4195d2d14a79-400x200.jpg');" href="/wiki/my-article">
+        <span class="groups-group-post-title">My Article</span>
+        <span class="groups-group-post-summary">Get to know the basics, and a few helpful tips &amp; tricks along the way!</span>
+        <span class="groups-group-post-status">2 hours ago</span>
+      </a>
+      <a class="groups-group-post show" style="background-image: url('/media/2737a010-1bbb-11e6-9e15-4195d2d14a79-400x200.jpg');" href="/wiki/my-article">
+        <span class="groups-group-post-title">My Article</span>
+        <span class="groups-group-post-summary">Get to know the basics, and a few helpful tips &amp; tricks along the way!</span>
+        <span class="groups-group-post-status">4 hours ago</span>
+      </a>
+      <a class="groups-group-post show" style="background-image: url('/media/2737a010-1bbb-11e6-9e15-4195d2d14a79-400x200.jpg');" href="/wiki/my-article">
+        <span class="groups-group-post-title">My Article</span>
+        <span class="groups-group-post-summary">Get to know the basics, and a few helpful tips &amp; tricks along the way!</span>
+        <span class="groups-group-post-status">4 hours ago</span>
+      </a>
+
+      <div class="groups-group-post-separator"></div>
+
+      <a class="groups-group-post show" style="background-image: url('/media/2737a010-1bbb-11e6-9e15-4195d2d14a79-400x200.jpg');" href="/wiki/my-article">
+        <span class="groups-group-post-title">My Article</span>
+        <span class="groups-group-post-summary">Get to know the basics, and a few helpful tips &amp; tricks along the way!</span>
+        <span class="groups-group-post-status">3 days ago</span>
+      </a>
+      <a class="groups-group-post show" style="background-image: url('/media/2737a010-1bbb-11e6-9e15-4195d2d14a79-400x200.jpg');" href="/wiki/my-article">
+        <span class="groups-group-post-title">My Article</span>
+        <span class="groups-group-post-summary">Get to know the basics, and a few helpful tips &amp; tricks along the way!</span>
+        <span class="groups-group-post-status">3 days ago</span>
+      </a>
+      <a class="groups-group-post show" style="background-image: url('/media/2737a010-1bbb-11e6-9e15-4195d2d14a79-400x200.jpg');" href="/wiki/my-article">
+        <span class="groups-group-post-title">My Article</span>
+        <span class="groups-group-post-summary">Get to know the basics, and a few helpful tips &amp; tricks along the way!</span>
+        <span class="groups-group-post-status">3 days ago</span>
+      </a>
+
+      <div class="groups-group-post-separator"></div>
+
+      <a class="groups-group-post show" style="background-image: url('/media/2737a010-1bbb-11e6-9e15-4195d2d14a79-400x200.jpg');" href="/wiki/my-article">
+        <span class="groups-group-post-title">My Article</span>
+        <span class="groups-group-post-summary">Get to know the basics, and a few helpful tips &amp; tricks along the way!</span>
+        <span class="groups-group-post-status">3 days ago</span>
+      </a>
+      <a class="groups-group-post show" style="background-image: url('/media/2737a010-1bbb-11e6-9e15-4195d2d14a79-400x200.jpg');" href="/wiki/my-article">
+        <span class="groups-group-post-title">My Article</span>
+        <span class="groups-group-post-summary">Get to know the basics, and a few helpful tips &amp; tricks along the way!</span>
+        <span class="groups-group-post-status">3 days ago</span>
+      </a>
+
+      <div class="clear"></div>
+
+      <div class="row">
+        <div class="four columns">
+          <div class="groups-group-widget">
+            Special group: This group is attributed to each signed platform member
+            Visibility: #Members
+            Edit group: #Members - Leaders
+            Apps: Wiki
+          </div>
+        </div>
+      </div>
+    </section> -->
+
+  </div>
+</div>

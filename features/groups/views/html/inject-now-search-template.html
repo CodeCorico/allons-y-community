@@ -1,0 +1,11 @@
+{{#partial groupSearchTemplate}}
+  <rv-require
+    name="groups-group-item"
+    src="/public/groups/groups-group-item"
+
+    data-bindparent-group="entities.{{@index}}"
+    data-template="complete"
+    data-index="{{@index}}"
+    data-on-click="click"
+  ></rv-require>
+{{/partial}}

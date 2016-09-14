@@ -1,0 +1,23 @@
+{
+  "env": [{
+    "type": "input",
+    "name": "SESSION_DURATION_DAYS",
+    "message": "User session duration (in days):",
+    "default": 2
+  }, {
+    "type": "confirm",
+    "name": "USERS_GCM",
+    "message": "Use Google Cloud Messaging for push notifications:",
+    "default": false
+  }, {
+    "type": "input",
+    "name": "USERS_GCM_API_PROJECT_ID",
+    "message": "Google Cloud Messaging project ID:",
+    "when": "USERS_GCM=true"
+  }, {
+    "type": "input",
+    "name": "USERS_GCM_API_KEY",
+    "message": "Google Cloud Messaging project API key:",
+    "when": "USERS_GCM=true"
+  }]
+}

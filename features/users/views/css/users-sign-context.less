@@ -1,0 +1,259 @@
+@import "web";
+
+.users-sign-context {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  .users-sign-context-section {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    box-sizing: border-box;
+    width: 100%;
+    .transform(translateY(-50%));
+
+    &.welcome-sb-1 {
+      opacity: 0;
+      .transform(translateY(-100%));
+      .transition(all .35s @easeOutQuart);
+    }
+
+    .users-sign-context-panels {
+      position: relative;
+      overflow: hidden;
+
+      .users-sign-context-panels-content {
+        position: relative;
+        display: flex;
+        width: 500%;
+        left: -300%;
+        .transition(left 0.35s @easeOutQuart);
+
+        .users-sign-context-panel {
+          flex: 1;
+          padding: 0 1rem;
+
+          .pl-button-onoff  {
+            width: 100%;
+            position: relative;
+            margin-top: 1rem;
+            margin-bottom: 1em;
+
+            &.on label {
+              color: lighten(@successColor, 30%);
+            }
+
+            label {
+              text-align: left;
+              color: white;
+              width: 100%;
+              padding-right: 5rem;
+              box-sizing: border-box;
+              white-space: normal;
+            }
+
+            div {
+              position: absolute;
+              top: 0;
+              right: 0;
+            }
+          }
+        }
+      }
+
+      .users-sign-context-message {
+        z-index: 1;
+        position: absolute;
+        display: flex;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        height: 100%;
+
+        &.success div {
+          background: @successColor;
+        }
+
+        &.error div {
+          background: @errorColor;
+        }
+
+        div {
+          margin: auto;
+          padding: 5rem 0;
+          width: 100%;
+          text-align: center;
+          color: white;
+          font-size: 2rem;
+
+          ol, li {
+            text-align: left;
+            list-style-type: decimal;
+          }
+
+          ol {
+            margin-left: 4rem;
+          }
+
+          li {
+            padding-left: 1rem;
+          }
+        }
+
+        &.message-sb-1 {
+          top: 0;
+          .transition(top 0.55s @easeOutQuart);
+        }
+
+        &.message-sb-2 {
+          top: -100%;
+          .transition(top 0.55s @easeOutQuart);
+        }
+      }
+    }
+
+    &.in-forgot-password {
+      .users-sign-context-panels .users-sign-context-panels-content {
+        left: 0;
+      }
+    }
+
+    &.in-forgot-code {
+      .users-sign-context-panels .users-sign-context-panels-content {
+        left: -100%;
+      }
+    }
+
+    &.in-forgot {
+      .users-sign-context-panels .users-sign-context-panels-content {
+        left: -200%;
+      }
+    }
+
+    &.in-signup {
+      .users-sign-context-panels .users-sign-context-panels-content {
+        left: -400%;
+      }
+    }
+
+    .users-sign-context-avatars {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .users-sign-context-avatar, .users-sign-context-avatar-new {
+      height: 12rem;
+      background-color: @accentColor;
+      background-position: 50%;
+      background-repeat: no-repeat;
+      background-size: contain;
+      overflow: hidden;
+
+      &.cover {
+        background-size: cover;
+      }
+
+      &.new {
+        .transform(translateX(-100%));
+        .transition(all .55s @easeOutQuart);
+      }
+    }
+
+    .users-sign-context-avatar-new {
+      position: absolute;
+      top: 0;
+      left: 100%;
+      width: 100%;
+    }
+
+    input[type="text"], input[type="password"] {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 4rem;
+      margin-bottom: 0;
+      border: 0;
+      border-top: 1px solid #eaeaea;
+      font-weight: 400;
+      font-size: 1.6rem;
+      line-height: 1.2;
+      color: #333;
+
+      &.first {
+        border-top: 0;
+      }
+    }
+
+    .users-sign-context-submit-container {
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    .users-sign-context-submit {
+      border: 0;
+      margin: 0;
+      background: @accentColor;
+      color: white;
+    }
+
+    ul, li {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    ul {
+      margin-top: 2rem;
+      padding: 0 1rem;
+    }
+
+    .users-sign-context-linkbutton {
+      cursor: pointer;
+      background: none;
+      color: @accentColor;
+      padding: 0;
+      margin: 0 0 0.5rem;
+      border: 0;
+      text-decoration: none;
+      line-height: 1.2;
+      height: auto;
+      text-transform: none;
+      font-weight: 400;
+      font-size: 1.6rem;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .users-sign-context-welcome {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    box-sizing: border-box;
+    width: 100%;
+    .transform(translateY(-50%));
+
+    .pl-message {
+      text-align: center;
+      font-size: 3rem;
+
+      .word {
+        margin-left: 1rem;
+      }
+
+      strong {
+        color: @accentColor;
+      }
+    }
+
+    &.welcome-sb-1 {
+      display: block;
+    }
+  }
+}

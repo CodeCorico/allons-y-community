@@ -1,0 +1,20 @@
+<a
+  class="
+    members-member-item
+    {{template ? 'members-member-item-' + template : ''}}
+    {{(notransition && notransition == 'true') || show ? 'show' : ''}}
+    {{selected ? 'selected' : ''}}
+    {{cls ? cls : ''}}
+  "
+  href="/members/{{member.url}}"
+  title="{{member.username}}"
+  on-click="click"
+>
+  <span
+    class="members-member-item-avatar"
+    style="background-image: url('{{displayAvatar(member.avatarThumbSquare)}}');"
+  ></span>
+  <h3>{{{member.username}}}</h3>
+
+  {{> members-member-item-extend}}
+</a>

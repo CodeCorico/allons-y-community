@@ -1,0 +1,23 @@
+@import "web";
+
+.members-list {
+  position: relative;
+  overflow: hidden;
+
+  &.members-list-thumbnail {
+    .members-list-more {
+      line-height: 3rem;
+    }
+  }
+
+  .members-list-more {
+    cursor: default;
+    float: left;
+    width: auto;
+    padding: 0 0.5rem;
+    background: @accentColor;
+    color: white;
+    text-align: center;
+    line-height: 15rem;
+  }
+}

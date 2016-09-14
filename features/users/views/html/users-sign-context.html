@@ -1,0 +1,134 @@
+<div class="pl-section users-sign-context">
+
+  <section
+    class="
+      users-sign-context-section
+      {{inPanel ? 'in-' + inPanel : ''}}
+      {{cls}}
+      {{welcomeSB}}
+    "
+  >
+    <div class="users-sign-context-panels">
+      <div class="users-sign-context-panels-content">
+        <div class="users-sign-context-panel">
+          <p>{{{_('Enter your new <strong>password</strong> (twice to confirm) to change your password.')}}}</p>
+          <input type="password" name="passwordForgot" placeholder="{{_('New password')}}" on-keypress="forgotPasswordPress" class="first"/>
+          <input type="password" name="validpasswordForgot" placeholder="{{_('Re-enter your password')}}" on-keypress="forgotPasswordPress" class="first"/>
+
+          <div class="users-sign-context-submit-container">
+            <button class="users-sign-context-submit" on-click="forgotPassword">{{_('Create my password')}}</button>
+          </div>
+        </div>
+
+        <div class="users-sign-context-panel">
+          <p>{{{_('Use your <strong>validation code</strong> to get the possibility to change your password.')}}}</p>
+          <input type="text" name="codeForgot" placeholder="{{_('Your code')}}" on-keypress="forgotCodePress" class="first"/>
+
+          <div class="users-sign-context-submit-container">
+            <button class="users-sign-context-submit" on-click="forgotCode">{{_('Validate the code')}}</button>
+          </div>
+        </div>
+
+        <div class="users-sign-context-panel">
+          <p>{{_('Submit your email and submit to receive a validation code in your mailbox.')}}</p>
+          <input type="text" name="emailForgot" placeholder="{{_('Your email')}}" on-keypress="forgotPress" class="first"/>
+
+          <div class="users-sign-context-submit-container">
+            <button class="users-sign-context-submit" on-click="forgot">{{_('Send me the code')}}</button>
+          </div>
+        </div>
+
+        <div class="users-sign-context-panel">
+          <div class="users-sign-context-avatars">
+            <div
+              class="
+                users-sign-context-avatar
+                {{signinAvatars.avatarThumb ? 'cover' : ''}}
+                {{signinNewAvatar ? 'new' : ''}}
+              "
+              style="background-image: url('{{signinAvatars.avatarThumb || '/public/users/avatar.png'}}');"
+            ></div>
+            <div
+              class="
+                users-sign-context-avatar-new
+                {{signinAvatarsNew.avatarThumb ? 'cover' : ''}}
+                {{signinNewAvatar ? 'new' : ''}}
+              "
+              style="background-image: url('{{signinAvatarsNew.avatarThumb || '/public/users/avatar.png'}}');"
+            ></div>
+          </div>
+
+          <input type="text" name="emailSignin" value="{{signinEmail}}" placeholder="{{_('Your email')}}" on-keypress="signinPress" class="first"/>
+          <input type="password" name="passwordSignin" placeholder="{{_('Your password')}}" on-keypress="signinPress"/>
+
+          <div class="users-sign-context-submit-container">
+            <button class="users-sign-context-submit" on-click="signin">{{_('Signin')}}</button>
+          </div>
+        </div>
+
+        <div class="users-sign-context-panel">
+          <p>{{_('Signup to our service to access all the content and make your own!')}}</p>
+
+          <input type="text" name="firstnameSignup" placeholder="{{_('First name')}}" on-keypress="signupPress" class="first"/>
+          <input type="text" name="lastnameSignup" placeholder="{{_('Last name')}}" on-keypress="signupPress"/>
+          <input type="text" name="emailSignup" placeholder="{{_('Your email')}}" on-keypress="signupPress"/>
+          <input type="text" name="validemailSignup" placeholder="{{_('Re-enter email')}}" on-keypress="signupPress"/>
+          <input type="password" name="passwordSignup" placeholder="{{_('New password')}}" on-keypress="signupPress"/>
+
+          {{#if membersNeedsLeader}}
+            <rv-require
+              name="pl-button-onoff"
+              src="/public/vendor/plumes/buttons/pl-button-onoff"
+              data-text-label="{{_('Become the Members\'s leader. You will be able to administrate the entire community.')}}"
+              data-bind-on="membersLeader"
+            ></rv-require>
+          {{/if}}
+
+          <div class="users-sign-context-submit-container">
+            <button class="users-sign-context-submit" on-click="signup">{{_('Signup')}}</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="users-sign-context-message {{messageCls}} {{messageSB}}">
+        <div>{{{message}}}</div>
+      </div>
+    </div>
+
+    <ul>
+      {{#if inPanel == 'forgot-code' || inPanel == 'forgot-password'}}
+        <li>
+          <button class="users-sign-context-linkbutton" on-click="backSignin">
+            {{_('Back to signin')}}
+          </button>
+        </li>
+      {{else}}
+        {{#if canSignup}}
+          <li>
+            <button class="users-sign-context-linkbutton" on-click="toggleSignup">
+              {{_(inPanel == 'signup' ? 'Signin' : 'Create my account')}}
+            </button>
+          </li>
+        {{/if}}
+
+        <li>
+          <button class="users-sign-context-linkbutton" on-click="toggleForgot">
+            {{_(inPanel == 'forgot' ? 'Signin' : 'I forgot my password')}}
+          </button>
+        </li>
+      {{/if}}
+
+      {{#inject users-sign-buttons /}}
+    </ul>
+  </section>
+
+  {{#inject users-sign /}}
+
+  <section class="users-sign-context-welcome {{welcomeSB}}">
+    <rv-require
+      name="pl-messages-message"
+      src="/public/vendor/plumes/messages/pl-messages-message"
+      ondemand="pl-messages-message"
+    ></rv-require>
+  </section>
+</div>
