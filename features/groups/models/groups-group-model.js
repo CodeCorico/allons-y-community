@@ -858,6 +858,7 @@ module.exports = function() {
                 }], function() {
                   member.permissions = [],
                   member.permissionsPublic = [];
+                  member.isMembersLeader = isMembersLeader;
 
                   if (isMembersLeader) {
                     Object.keys(_permissions).forEach(function(key) {
@@ -1107,6 +1108,9 @@ module.exports = function() {
         createGroup: function(data, callback) {
           data.search1 = data.name || null;
           data.search3 = data.description || null;
+
+          data.createdAt = new Date();
+          data.updatedAt = data.createdAt;
 
           this
             .create(data)
@@ -1364,9 +1368,13 @@ module.exports = function() {
                 return;
               }
 
-              $RealTimeService.fire(eventName, {
-                group: group.publicData($socket.user, null, ['leaders', 'members', 'invitations'])
-              }, $socket || null);
+              var publicGroup = group.publicData($socket.user, null, ['leaders', 'members', 'invitations']);
+
+              $RealTimeService.fire(eventName, publicGroup ? {
+                group: publicGroup
+              } : {
+                error: 'not found'
+              }, $socket);
 
               if (callback) {
                 callback();
@@ -1577,7 +1585,7 @@ module.exports = function() {
         },
 
         hasPermissionToSee: function(user, groupId) {
-          return user && user.hasPermission && user.hasPermission('groups-see:' + groupId);
+          return user && user.hasPermission && (user.isMembersLeader || user.hasPermission('groups-see:' + groupId));
         },
 
         searchPublicData: function(group, $socket, regex) {
@@ -1595,8 +1603,26 @@ module.exports = function() {
         },
 
         publicData: function(group, user, moreData, remove) {
-          if (!user || !this.hasPermissionToSee(user, group.id || group._id)) {
+          if (!user) {
             return null;
+          }
+
+          group.invitations = group.invitations || [];
+
+          if (!this.hasPermissionToSee(user, group.id || group._id)) {
+            var hasPermissionToSee = false;
+
+            for (var i = 0; i < group.invitations.length; i++) {
+              if (group.invitations[i].id == user.id) {
+                hasPermissionToSee = true;
+
+                break;
+              }
+            }
+
+            if (!hasPermissionToSee) {
+              return null;
+            }
           }
 
           group = {
@@ -1625,7 +1651,7 @@ module.exports = function() {
           }
 
           var seeMembers = user.hasPermission('groups-see-members:' + group.id),
-              seeLeaders = user.hasPermission('groups-see-leaders:' + group.id),
+              seeLeaders = user.isMembersLeader || user.hasPermission('groups-see-leaders:' + group.id),
               isMember = user.hasPermission('groups-member:' + group.id),
               isLeader = user.hasPermission('groups-leader:' + group.id);
 

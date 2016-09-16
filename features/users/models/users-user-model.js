@@ -69,6 +69,10 @@ module.exports = function() {
         isSearchable: true,
         isSearchableAdvanced: true,
         attributes: {
+          isMembersLeader: {
+            type: 'boolean',
+            index: true
+          },
           sessions: {
             type: 'array',
             index: true
@@ -854,7 +858,10 @@ module.exports = function() {
                 });
 
               if ($socket) {
-                if (!$socket.user.hasPermission(permissionToCheck + ':' + group.id)) {
+                if (
+                  (!$socket.user.isMembersLeader || permissionToCheck != 'groups-see-leaders') &&
+                  !$socket.user.hasPermission(permissionToCheck + ':' + group.id)
+                ) {
                   $RealTimeService.fire(eventName, {
                     error: 'not found'
                   }, $socket);
@@ -876,7 +883,12 @@ module.exports = function() {
                   var event = eventNamesCount.eventNames[eventName];
 
                   event.sockets.forEach(function(socket) {
-                    if (!socket.user || !socket.user.id || !socket.user.hasPermission(permissionToCheck + ':' + group.id)) {
+                    if (!socket.user || !socket.user.id ||
+                      (
+                        (!$socket.user.isMembersLeader || permissionToCheck != 'groups-see-leaders') &&
+                        !socket.user.hasPermission(permissionToCheck + ':' + group.id)
+                      )
+                    ) {
                       return;
                     }
 
