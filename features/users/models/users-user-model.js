@@ -48,7 +48,8 @@ module.exports = function() {
         bcrypt = require('bcrypt'),
         uuid = require('node-uuid'),
         webPush = process.env.USERS_GCM && process.env.USERS_GCM == 'true' ? require('web-push') : false,
-        path = require('path');
+        path = require('path'),
+        _changeAvatarMethods = [];
 
     require(path.resolve(__dirname, 'users-thumbs-factory-back.js'))();
     $allonsy.requireInFeatures('models/web-url-factory');
@@ -277,17 +278,23 @@ module.exports = function() {
                 _this.refreshUser(users[0]);
                 _this.callUsersSigned();
 
-                DependencyInjection.injector.model.get('GroupModel').updateMember(users[0], function(err) {
-                  if (err) {
-                    return callback(err);
-                  }
+                async.eachSeries(_changeAvatarMethods, function(method, nextMethod) {
 
-                  // DependencyInjection.injector.model.get('PostModel').updateMember(users[0], function(err) {
-                  //   callback(err, userAvatars);
-                  // });
+                  method(users[0], nextMethod);
+
+                }, function() {
+                  callback(null, userAvatars);
                 });
+
+                // DependencyInjection.injector.model.get('PostModel').updateMember(users[0], function(err) {
+                //   callback(err, userAvatars);
+                // });
               });
           });
+        },
+
+        onChangeAvatar: function(method) {
+          _changeAvatarMethods.push(method);
         },
 
         notifications: function(userId, callback) {

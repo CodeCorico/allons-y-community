@@ -945,7 +945,8 @@ module.exports = function() {
 
         init: function() {
           var _this = this,
-              EntityModel = DependencyInjection.injector.model.get('EntityModel');
+              EntityModel = DependencyInjection.injector.model.get('EntityModel'),
+              UserModel = DependencyInjection.injector.model.get('UserModel');
 
           Object.keys(REALTIME_EVENTS).forEach(function(eventName) {
             if (REALTIME_EVENTS[eventName].call) {
@@ -966,6 +967,12 @@ module.exports = function() {
           }
 
           this.fillSpecialGroups();
+
+          UserModel.onChangeAvatar(function(user, callback) {
+            _this.updateMember(user, function() {
+              callback();
+            });
+          });
         },
 
         fillSpecialGroups: function() {
