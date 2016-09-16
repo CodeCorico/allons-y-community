@@ -223,7 +223,7 @@ module.exports = [{
                 '<strong>', (isLeader ? 'leader' : 'member'), '</strong> of <strong>', group.name, '</strong>. ',
                 '<em>(invited by ', invitationBy.username, ')</em>'
               ].join(''),
-            picture: '/public/groups/group-notification.gif',
+            picture: group.coverMini || '/public/groups/group-mini.png',
             pushTitle: accept ?
               'A new ' + (isLeader ? 'leader' : 'member') + ' joins ' + group.name + '! - ' + process.env.BRAND :
               'Someone denied to be ' + (isLeader ? 'leader' : 'member') + ' of ' + group.name + '!',

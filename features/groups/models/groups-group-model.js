@@ -142,7 +142,8 @@ module.exports = function() {
         url: group.url,
         cover: group.cover,
         coverLarge: group.coverLarge,
-        coverThumb: group.coverThumb
+        coverThumb: group.coverThumb,
+        coverMini: group.coverMini
       };
     }
 
@@ -194,6 +195,7 @@ module.exports = function() {
           cover: 'string',
           coverLarge: 'string',
           coverThumb: 'string',
+          coverMini: 'string',
 
           createUrl: function(force, callback) {
             var _this = this;
@@ -597,7 +599,7 @@ module.exports = function() {
                     '<strong>' + _this.name + '</strong> as ',
                     isLeader ? 'leader' : 'member'
                   ].join(''),
-                  picture: '/public/groups/group-notification.gif',
+                  picture: _this.coverMini || '/public/groups/group-mini.png',
                   pushTitle: 'You are invited! - ' + process.env.BRAND,
                   pushContent: leader.username + ' invites you to join ' + _this.name + ' as ' + (isLeader ? 'leader' : 'member'),
                   pushPicture: '/public/groups/group-notification.jpg',
@@ -1605,9 +1607,10 @@ module.exports = function() {
             url: group.url,
             special: group.special,
             members: group.members || [],
-            cover: group.cover,
-            coverLarge: group.coverLarge,
-            coverThumb: group.coverThumb,
+            cover: group.cover || null,
+            coverLarge: group.coverLarge || null,
+            coverThumb: group.coverThumb || null,
+            coverMini: group.coverMini || null,
             permissionsLeaders: group.permissionsLeaders,
             permissionsMembers: group.permissionsMembers,
             invitations: group.invitations,

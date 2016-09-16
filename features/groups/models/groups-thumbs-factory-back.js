@@ -13,6 +13,10 @@ module.exports = function() {
           name: 'coverThumb',
           width: 240,
           height: 170
+        }, {
+          name: 'coverMini',
+          width: 50,
+          height: 50
         }],
 
         path = require('path'),
