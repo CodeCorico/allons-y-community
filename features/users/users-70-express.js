@@ -2,24 +2,6 @@
 
 module.exports = function($server, $BodyDataService, UserModel, GroupModel) {
 
-  $server.apiFilter(function(req, res, config) {
-    if (config.isMember && (!req.user || !req.user.id)) {
-      res.sendStatus(403);
-
-      return false;
-    }
-
-    if (config.permissions && config.permissions.length) {
-      if (!req.user || !req.user.id || !req.user.hasPermissions(config.permissions)) {
-        res.sendStatus(403);
-
-        return false;
-      }
-    }
-
-    return true;
-  });
-
   $server.use(function(req, res, next) {
 
     UserModel.fromSession(req.signedCookies.session || null, function(user, session) {
