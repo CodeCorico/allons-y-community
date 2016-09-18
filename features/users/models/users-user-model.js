@@ -16,11 +16,6 @@ module.exports = function() {
             description: 'Signin permission.',
             isPublic: true
           }
-          // 'notifire-access': {
-          //   title: 'Access to the Notifire app',
-          //   description: 'Access to the Notifire app',
-          //   isPublic: true
-          // }
         },
         REALTIME_EVENTS = {
           'users-user': {

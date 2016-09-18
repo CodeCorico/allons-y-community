@@ -66,20 +66,6 @@ module.exports = function() {
         });
       };
 
-      this.sendNotification = function(message, content, picture, pushTitle, pushContent, pushPicture, user, eventName, eventArgs) {
-        $socket.emit('create(users/notification)', {
-          message: message,
-          content: content,
-          picture: picture,
-          user: user,
-          pushTitle: pushTitle,
-          pushContent: pushContent,
-          pushPicture: pushPicture,
-          eventName: eventName,
-          eventArgs: eventArgs
-        });
-      };
-
       this.actionNotification = function(index, args) {
         _this.clearNotificationsCount(index);
 
