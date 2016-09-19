@@ -219,7 +219,7 @@
       null,
       'talentforcepedia-f2',
       'F2',
-      $i18nService._('Open Profile'),
+      $i18nService._('Open your profile'),
       function(e) {
         // F2
         var isShortcut = e.keyCode == 113 && !e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey;
