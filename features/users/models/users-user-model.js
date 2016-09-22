@@ -1069,20 +1069,20 @@ module.exports = function() {
               //   feature: 'avatarReminder'
               // });
 
-              // setTimeout(function() {
-              //   _this.pushNotification(socket, [socket.user.id], {
-              //     message: 'Hey <strong>{firstname}</strong>, let\'s show your flair!',
-              //     content: 'Dear <strong>{firstname}</strong>, we all want to see more of you. What about creating your avatar? Just click on the camera icon on the right of your name and upload a nice picture. Else, we\'ll kill the kitty. Sincerly.',
-              //     picture: '/public/users/kitty.gif',
-              //     pushTitle: 'Hey {firstname}, let\'s show your flair! - ' + process.env.BRAND,
-              //     pushContent: 'What about creating your avatar?',
-              //     pushPicture: '/public/users/kitty.gif',
-              //     eventName: 'url',
-              //     eventArgs: {
-              //       url: '/wiki/talentforcepedia-documentations'
-              //     }
-              //   });
-              // }, 60000);
+              setTimeout(function() {
+                _this.pushNotification(socket, [socket.user.id], {
+                  message: $i18nService._('Hey <strong>{firstname}</strong>, let\'s show your flair!'),
+                  content: $i18nService._('Dear <strong>{firstname}</strong>, we all want to see more of you. What about creating your avatar? Just click on the camera icon on the right of your name and upload a nice picture. Else, we\'ll kill the kitty. Sincerly.'),
+                  picture: '/public/users/kitty.gif',
+                  pushTitle: $i18nService._('Hey {firstname}, let\'s show your flair!') + ' - ' + process.env.BRAND,
+                  pushContent: $i18nService._('What about creating your avatar?'),
+                  pushPicture: '/public/users/kitty.gif',
+                  eventName: 'url',
+                  eventArgs: {
+                    url: '/members'
+                  }
+                });
+              }, 60000);
             });
         },
 
