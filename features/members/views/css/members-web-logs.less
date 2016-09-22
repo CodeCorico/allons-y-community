@@ -1,0 +1,108 @@
+@import "web";
+
+.web-logs-layout-container {
+  .member-graph-items {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow: hidden;
+
+    .member-graph-item {
+      position: relative;
+      float: left;
+      height: 6rem;
+
+      svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 20px;
+
+        line {
+          stroke: #ccc;
+          stroke-width: 1;
+        }
+
+        &.svg-bar-null line {
+          stroke: #26C6DA;
+        }
+      }
+
+      .member-graph-avatar {
+        position: relative;
+        height: 4rem;
+        width: 4rem;
+        border-radius: 50%;
+        background-size: 100%;
+        margin: 1.5rem auto 0;
+        background-color: @accentColor;
+        background-position: 50%;
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+    }
+  }
+
+  .web-logs-layout {
+    &.web-logs-layout-member-graph {
+      bottom: 6rem;
+    }
+
+    li .members-graph {
+      position: absolute;
+      top: 0;
+      left: 1rem;
+      bottom: 0;
+      display: none;
+      overflow: hidden;
+      background-position: 10px 0;
+
+      &.opened {
+        display: block;
+      }
+
+      .members-graph-bar, .members-graph-circle-bar, .members-graph-circle-bar-full {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        width: 0.1rem;
+        margin-left: 5px;
+        background: #ccc;
+
+        &.graph-bar-null {
+          background: #26C6DA;
+        }
+      }
+
+      .members-graph-circle-bar {
+        top: 1.8rem;
+        bottom: 0;
+        height: auto;
+      }
+
+      .members-graph-circle {
+        z-index: 1;
+        position: absolute;
+        top: 1.8rem;
+        width: 1.1rem;
+        height: 1.1rem;
+        border-radius: 50%;
+      }
+
+      svg {
+        position: absolute;
+        top: 0;
+        left: 5px;
+        width: 100%;
+        height: 1.8rem;
+
+        line {
+          stroke: @accentColor;
+          stroke-width: 1;
+        }
+      }
+    }
+  }
+}

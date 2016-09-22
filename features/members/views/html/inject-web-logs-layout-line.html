@@ -1,0 +1,23 @@
+<div class="members-graph {{members.length ? 'opened' : ''}}" style="width: {{chartWidth}}px">
+  {{#memberGraph:j}}
+    <span
+      class="members-graph-bar {{clientNull ? 'graph-bar-null' : ''}}"
+      style="left: {{j * 30}}px"
+    ></span>
+    {{#if directBar}}
+    <span class="members-graph-bar accent-bg" style="left: {{j * 30}}px"></span>
+    {{/if}}
+    {{#if action}}
+    <svg>
+      <line
+        x1="{{previousActionIndex * 30}}"
+        y1="0"
+        x2="{{j * 30}}"
+        y2="100%"
+      ></line>
+    </svg>
+    <span class="members-graph-circle-bar accent-bg" style="left: {{j * 30}}px"></span>
+    <span class="members-graph-circle accent-bg" style="left: {{j * 30}}px"></span>
+    {{/if}}
+  {{/memberGraph}}
+</div>

@@ -1,0 +1,21 @@
+<div class="member-graph-items">
+  {{#members}}
+  <div class="member-graph-item" style="width: {{clients.length < 2 ? 30 : width}}px;">
+    {{#clients:i}}
+    <svg class="{{. === null ? 'svg-bar-null' : ''}}">
+      <line
+        x1="{{clients.length < 2 ? 15 : i * 30 + 15}}"
+        y1="0"
+        x2="{{clients.length < 2 ? 15 : clients.length / 2 * 30}}"
+        y2="20"
+      ></line>
+    </svg>
+    {{/clients}}
+    <div
+      title="{{name}}"
+      class="member-graph-avatar"
+      style="background-image: url('{{picture}}'); margin-left: {{clients.length < 2 ? '-5px' : 'auto'}}"
+    ></div>
+  </div>
+  {{/members}}
+</div>

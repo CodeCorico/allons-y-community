@@ -1,7 +1,7 @@
 module.exports = function() {
   'use strict';
 
-  DependencyInjection.model('UserModel', function($allonsy, $AbstractModel, $RealTimeService) {
+  DependencyInjection.model('UserModel', function($allonsy, $AbstractModel, $RealTimeService, $i18nService) {
 
     var MAX_NOTIFICATION_TIME = 3600 * 24 * 30, // 30 days in sec
         FORGOT_CODE_DURATION = 30 * 60 * 1000, // 30 min in ms
@@ -234,6 +234,57 @@ module.exports = function() {
           $RealTimeService.registerEvents(REALTIME_EVENTS);
 
           EntityModel.registerSearchPublicData('user', this, this.searchPublicData);
+
+          if (process.env.WEB_LOGS && process.env.WEB_LOGS == 'true') {
+            var WebLogModel = DependencyInjection.injector.model.get('WebLogModel');
+
+            WebLogModel.logConverter(function() {
+              _this.logConverter.apply(_this, arguments);
+            });
+
+            WebLogModel.searchConditions(function() {
+              _this.searchConditions.apply(_this, arguments);
+            });
+          }
+        },
+
+        logConverter: function(log) {
+          if (log.req && log.req.user && log.req.user.id && !log.user) {
+            log.user = log.req.user;
+          }
+          if (log.socket && log.socket.user && log.socket.user.id && !log.user) {
+            log.user = log.socket.user;
+          }
+
+          if (log.user && log.user.id) {
+            log.session = log.user.userSession;
+            log.userName = log.user.username;
+            log.userEmail = log.user.email;
+            log.userAvatarMini = log.user.avatarMini;
+            log.user = this.mongo.objectId(log.user.id);
+          }
+        },
+
+        searchConditions: function(conditions, query) {
+          if (conditions.userName) {
+            query.userName = {
+              $regex: conditions.userName
+                .split(';')
+                .filter(function(value) {
+                  return !!value.trim();
+                })
+                .join('|'),
+              $options: 'i'
+            };
+          }
+
+          if (conditions.user) {
+            query.user = this.mongo.objectId(conditions.user);
+          }
+
+          if (conditions.session) {
+            query.session = conditions.session;
+          }
         },
 
         names: function(callback) {
@@ -366,6 +417,7 @@ module.exports = function() {
                 }
 
                 $allonsy.log('allons-y-community', 'users:user-model:notifications-viewed', {
+                  label: 'Read all its notifications',
                   fromLast: !!fromLast,
                   notification: lastNotification,
                   socket: $socket || null
