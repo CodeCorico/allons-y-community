@@ -1,17 +1,19 @@
 'use strict';
 
 module.exports = [{
-  event: 'update(route)',
+  event: 'update(web/route)',
   controller: function($socket, $message) {
-    if (!this.validMessage($message)) {
+    if (!this.validMessage($message, {
+      path: ['string']
+    })) {
       return;
     }
 
     $socket.route = {
-      init: $message.init || false,
-      hash: $message.hash || null,
-      params: $message.params || null,
-      url: $message.path || null
+      init: !!$message.init,
+      hash: typeof $message.hash == 'string' && $message.hash || null,
+      params: typeof $message.params == 'string' && $message.params || null,
+      url: $message.path
     };
 
     // PostModel.callPostsOpened();

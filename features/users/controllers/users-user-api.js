@@ -36,6 +36,7 @@ module.exports = [{
       // });
 
       $allonsy.log('allons-y-community', 'users:users:user-notification-action', {
+        label: 'Action on notification',
         req: $req,
         notification: $req.body.id
       });

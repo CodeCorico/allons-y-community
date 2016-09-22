@@ -424,7 +424,6 @@ module.exports = function() {
 
           var _this = this,
               $SocketsService = DependencyInjection.injector.model.get('$SocketsService'),
-              // WinChartModel = DependencyInjection.injector.model.get('WinChartModel'),
               notificationId = notificationArgs && notificationArgs.id || uuid.v1(),
               notificationOrigin = {
                 id: notificationId,
@@ -444,6 +443,9 @@ module.exports = function() {
               id: usersId
             } : {})
             .exec(function(err, users) {
+
+              var usersPushNotifications = [],
+                  pushNotificationsCount = 0;
 
               async.mapSeries(users, function(user, nextUser) {
 
@@ -503,6 +505,8 @@ module.exports = function() {
                     $SocketsService.each(function(socket) {
                       if (socket && socket.user && socket.user.id == user.id && socket.userActivity) {
                         userActivity = true;
+
+                        return false;
                       }
                     });
 
@@ -526,6 +530,8 @@ module.exports = function() {
                       payload = JSON.stringify(payload);
 
                       if (webPush) {
+                        usersPushNotifications.push(user.id);
+
                         user.notificationsPush.forEach(function(notificationPush) {
                           webPush.sendNotification(notificationPush.endpoint, {
                             TTL: 0,
@@ -533,6 +539,8 @@ module.exports = function() {
                             userAuth: notificationPush.userAuth,
                             payload: payload
                           });
+
+                          pushNotificationsCount++;
 
                           // WinChartModel.updateChart('updateFeatureCount', {
                           //   feature: 'pushNotificationsPush'
@@ -546,13 +554,21 @@ module.exports = function() {
                 });
 
               }, function() {
+                if (usersPushNotifications.length) {
+                  $allonsy.log('allons-y-community', 'users:user-send-push-notification', {
+                    label: 'Send ' + pushNotificationsCount + ' Push notifications to ' + usersPushNotifications.length + ' members',
+                    pushNotificationsCount: pushNotificationsCount,
+                    users: usersPushNotifications,
+                    socket: $socket
+                  });
+                }
+
                 if (callback) {
                   callback(null, notificationId);
                 }
 
                 var logArgs = extend(true, {
-                  feature: 'users.user.model',
-                  action: 'push.notification',
+                  label: 'Push notification to ' + usersId.length + ' members',
                   users: usersId,
                   socket: $socket || null
                 }, notificationOrigin);
@@ -1044,15 +1060,14 @@ module.exports = function() {
               avatarReminder: new Date()
             })
             .exec(function() {
-              // var WinChartModel = DependencyInjection.injector.service.get('WinChartModel');
+              $allonsy.log('allons-y-community', 'users:user-avatar-reminder', {
+                label: 'Gets the avatar reminder notification',
+                socket: socket
+              });
 
               // WinChartModel.updateChart('updateFeatureCount', {
               //   feature: 'avatarReminder'
               // });
-
-              $allonsy.log('allons-y-community', 'users:user-model:avatar-reminder', {
-                socket: socket
-              });
 
               // setTimeout(function() {
               //   _this.pushNotification(socket, [socket.user.id], {
@@ -1132,7 +1147,7 @@ module.exports = function() {
           }
 
           if (cleanSessions) {
-            user.save(function(err) {
+            user.save(function() {
               callback(user);
             });
 
@@ -1191,7 +1206,7 @@ module.exports = function() {
                     });
                   }
 
-                  user.save(function(err) {
+                  user.save(function() {
                     activeSession.duration = _this.sessionDuration();
 
                     callback(user, activeSession);
@@ -1236,6 +1251,11 @@ module.exports = function() {
                     user.save(function() {
                       session.duration = _this.sessionDuration();
 
+                      $allonsy.log('allons-y-community', 'users:signin:' + user.email + ':' + session.session, {
+                        label: 'Signin',
+                        user: user
+                      });
+
                       callback(null, user, session);
                     });
                   });
@@ -1272,6 +1292,11 @@ module.exports = function() {
 
               if (sessionRemoved) {
                 user.save(function() {
+                  $allonsy.log('allons-y-community', 'users:signout:' + user.email + ':' + session, {
+                    label: 'Signout',
+                    user: user
+                  });
+
                   callback(null);
                 });
 
@@ -1335,6 +1360,11 @@ module.exports = function() {
                           if (err) {
                             return callback(err);
                           }
+
+                          $allonsy.log('allons-y-community', 'users:create', {
+                            label: 'Register new member',
+                            user: user
+                          });
 
                           var GroupModel = DependencyInjection.injector.service.get('GroupModel'),
                               addFunc = 'addMember';

@@ -32,7 +32,7 @@
 
     $socket.on('reconnect', function() {
       $socket.once('read(users/activeuser.signed)', function() {
-        $socket.emit('update(route)', {
+        $socket.emit('update(web/route)', {
           init: false,
           path: location.pathname,
           hash: location.hash,

@@ -3,7 +3,7 @@
 module.exports = [{
   event: 'create(groups/group.invitation)',
   isMember: true,
-  controller: function($socket, GroupModel, UserModel, $SocketsService, $message) {
+  controller: function($allonsy, $socket, GroupModel, UserModel, $SocketsService, $message) {
     if (!this.validMessage($message, {
       groupId: 'filled'
     })) {
@@ -36,11 +36,19 @@ module.exports = [{
 
                 if (directMember) {
                   UserModel.refreshUsersGroupMembers(group.id);
-
                 }
                 else {
                   UserModel.refreshUsersGroupInvitations(group.id);
                 }
+
+                $allonsy.log('allons-y-community', 'groups:group-invit:' + group.id, {
+                  label: [
+                    'Invit <span class="accent">', user.username, '</span> ',
+                    'to be <span class="accent">', ($message.isLeader ? 'leader' : 'member'), '</span> ',
+                    'of the group <span class="accent">', group.name, '</span>'
+                  ].join(''),
+                  socket: $socket
+                });
 
                 // WinChartModel.updateChart('updateFeatureCount', {
                 //   feature: $message.isLeader ? 'groupsInvitLeader' : 'groupsInvitMember'
@@ -97,14 +105,6 @@ module.exports = [{
 
           UserModel.fromSocket($socket, function(err, user) {
             if (err || !user) {
-              $allonsy.logWarning('allons-y-community', 'groups:update(groups/group.invitation)', {
-                error: err || 'user not found',
-                notificationId: $message.notificationId,
-                groupId: $message.groupId,
-                accept: $message.accept,
-                socket: $socket
-              });
-
               return;
             }
 
@@ -114,14 +114,6 @@ module.exports = [{
               if (!accept) {
                 group.save(function(err) {
                   if (err) {
-                    $allonsy.logWarning('allons-y-community', 'groups:update(groups/group.invitation)', {
-                      error: err,
-                      notificationId: $message.notificationId,
-                      groupId: $message.groupId,
-                      accept: $message.accept,
-                      socket: $socket
-                    });
-
                     return;
                   }
 
@@ -133,14 +125,6 @@ module.exports = [{
 
               group[isLeader ? 'addLeader' : 'addMember'](user, true, function(err) {
                 if (err) {
-                  $allonsy.logWarning('allons-y-community', 'groups:update(groups/group.invitation)', {
-                    error: err,
-                    notificationId: $message.notificationId,
-                    groupId: $message.groupId,
-                    accept: $message.accept,
-                    socket: $socket
-                  });
-
                   return;
                 }
 
@@ -152,14 +136,6 @@ module.exports = [{
         }, function(callback) {
           UserModel.fromSocket($socket, function(err, user) {
             if (err || !user) {
-              $allonsy.logWarning('allons-y-community', 'groups:update(groups/group.invitation)', {
-                error: err || 'user not found',
-                notificationId: $message.notificationId,
-                groupId: $message.groupId,
-                accept: $message.accept,
-                socket: $socket
-              });
-
               return;
             }
 
@@ -244,6 +220,16 @@ module.exports = [{
               url: '/groups/' + group.url
             }
           }, function() {
+
+            $allonsy.log('allons-y-community', 'groups:group-invit-' + (accept ? 'accept' : 'decline') + ':' + group.id, {
+              label: [
+                (accept ? 'Accept' : 'Decline'), ' ',
+                'invitation to be <span class="accent">', (isLeader ? 'leader' : 'member'), '</span>',
+                'of the group <span class="accent">', group.name, '</span>, ',
+                'invited by <span class="accent">', invitationBy.username, '</span>'
+              ].join(''),
+              socket: $socket
+            });
 
             // WinChartModel.updateChart('updateFeatureCount', {
             //   feature: accept ?

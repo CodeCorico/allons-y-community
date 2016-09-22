@@ -1136,6 +1136,10 @@ module.exports = function() {
                     return callback(err);
                   }
 
+                  $allonsy.log('allons-y-community', 'groups:group-create:' + group.id, {
+                    label: 'Create new group <span class="accent">[' + group.name + ']</span>'
+                  });
+
                   callback(null, group);
                 });
               });
@@ -1258,6 +1262,11 @@ module.exports = function() {
                               id: group.id
                             })
                             .exec(function(err) {
+
+                              $allonsy.log('allons-y-community', 'groups:group-delete:' + group.id, {
+                                label: 'Delete group <span class="accent">[' + group.name + ']</span>'
+                              });
+
                               callback(err);
                             });
                         });

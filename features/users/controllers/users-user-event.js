@@ -31,6 +31,7 @@ module.exports = [{
       // });
 
       $allonsy.log('allons-y-community', 'users:update(users/user.avatar)', {
+        label: 'Change its avatar',
         avatar: $message.avatar,
         socket: $socket
       });
@@ -90,6 +91,7 @@ module.exports = [{
         // });
 
         $allonsy.log('allons-y-community', 'users:update(users/activeuser.pushnotifications)', {
+          label: $message.subscribe ? 'Subscribe to Push Notifications' : 'Unsubscribe from Push Notifications',
           subscribe: $message.subscribe,
           endpoint: $message.endpoint,
           socket: $socket
