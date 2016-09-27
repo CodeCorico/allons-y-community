@@ -7,9 +7,9 @@ module.exports = [{
   ],
 
   enter: [
-    '$FaviconService', '$BodyDataService', '$i18nService', '$Layout', '$context',
-  function($FaviconService, $BodyDataService, $i18nService, $Layout, $context) {
-    document.title = $i18nService._('Groups') + ' - ' + $BodyDataService.data('web').brand;
+    '$FaviconService', '$i18nService', '$Layout', '$context',
+  function($FaviconService, $i18nService, $Layout, $context) {
+    document.title = $i18nService._('Groups') + ' - ' + $Page.get('web').brand;
     $FaviconService.update('/public/groups/favicon.png');
 
     $Layout.selectApp('Groups', false);

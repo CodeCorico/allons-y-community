@@ -2,15 +2,13 @@
   'use strict';
 
   window.Ractive.controllerInjection('members-layout', [
-    '$BodyDataService',
     'MembersService', '$RealTimeService',
     '$Page', '$component', '$data', '$done',
   function membersLayoutController(
-    $BodyDataService,
     MembersService, $RealTimeService,
     $Page, $component, $data, $done
   ) {
-    var _web = $BodyDataService.data('web'),
+    var _web = $Page.data('web'),
         MembersLayout = $component({
           data: $.extend(true, {
             hasData: false,

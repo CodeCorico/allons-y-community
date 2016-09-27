@@ -12,9 +12,9 @@ module.exports = [{
   url: '/members/:member',
 
   enter: [
-    '$FaviconService', '$BodyDataService', '$i18nService', '$Layout', '$context',
-  function($FaviconService, $BodyDataService, $i18nService, $Layout, $context) {
-    document.title = $i18nService._('Members') + ' - ' + $BodyDataService.data('web').brand;
+    '$FaviconService', '$Page', '$i18nService', '$Layout', '$context',
+  function($FaviconService, $Page, $i18nService, $Layout, $context) {
+    document.title = $i18nService._('Members') + ' - ' + $Page.get('web').brand;
     $FaviconService.update('/public/members/favicon.png');
 
     $Layout.selectApp('Members', false);

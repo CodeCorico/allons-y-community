@@ -16,7 +16,7 @@
         window.Dropzone.autoDiscover = false;
 
         var _user = $BodyDataService.data('user') || null,
-            _web = $BodyDataService.data('web') || null,
+            _web = $Page.get('web') || null,
             _notificationsPanel = null,
             UsersProfileContext = $component({
               data: $.extend(true, {

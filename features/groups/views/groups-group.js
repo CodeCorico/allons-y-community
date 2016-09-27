@@ -3,12 +3,12 @@
 
   window.Ractive.controllerInjection('groups-group', [
     'GroupsService', '$RealTimeService',
-    '$Page', '$BodyDataService', '$component', '$data', '$done',
+    '$Page', '$component', '$data', '$done',
   function groupsGroupController(
     GroupsService, $RealTimeService,
-    $Page, $BodyDataService, $component, $data, $done
+    $Page, $component, $data, $done
   ) {
-    var _web = $BodyDataService.data('web'),
+    var _web = $Page.get('web'),
         _defaultCover = '/public/groups/group.png',
         GroupsGroup = $component({
           data: $.extend(true, {
