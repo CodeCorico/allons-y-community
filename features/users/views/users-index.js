@@ -8,6 +8,7 @@
     $Page, $BodyDataService, $i18nService, $socket,
     $RealTimeService, $NotificationsService, $ShortcutsService, $done
   ) {
+    window.Ractive.require('/public/users/users-index.css');
 
     var user = $BodyDataService.data('user'),
         defaultAvatar = '/public/users/avatar.png',
@@ -108,12 +109,20 @@
       }
     }
 
+    function profileButtonNetwork(on) {
+      if (!userProfileButton) {
+        return;
+      }
+
+      $(userProfileButton.el).find('button')[!on ? 'addClass' : 'removeClass']('offline');
+    }
+
     if (user.id) {
       $Page.rightButtonAdd('usersProfile', {
         type: 'indicator',
         image: $Page.get('avatar')(user.avatarMini || null),
         group: 'group-users-profile',
-        cls: 'talentforcepedia-users-profile-button',
+        cls: 'users-profile-button',
         ready: function(button) {
           userProfileButton = button;
 
@@ -139,13 +148,7 @@
             userProfileButton.set('image', $Page.get('avatar')(args.user.avatarMini));
           }
         },
-        network: function(on) {
-          if (!userProfileButton) {
-            return;
-          }
-
-          $(userProfileButton.el).find('button')[!on ? 'addClass' : 'removeClass']('offline');
-        }
+        network: profileButtonNetwork
       });
     }
     else if (user.permissionsPublic.indexOf('members-signin') > -1) {
@@ -153,15 +156,18 @@
         type: 'indicator',
         image: $Page.get('avatar')(null),
         group: 'group-users-sign',
-        cls: 'talentforcepedia-users-profile-button',
+        cls: 'users-profile-button',
         ready: function(button) {
           userProfileButton = button;
 
-          button.action(false);
+          if (DependencyInjection.injector.view.get('$Layout').get('screen') == 'screen-desktop') {
+            button.action(false);
+          }
         },
         beforeGroup: function(context, $group, userBehavior, callback) {
           context.require('users-sign-context').then(callback);
-        }
+        },
+        network: profileButtonNetwork
       });
     }
 
