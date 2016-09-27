@@ -1,7 +1,9 @@
 module.exports = function() {
   'use strict';
 
-  DependencyInjection.model('GroupModel', function($allonsy, $processIndex, $AbstractModel, $RealTimeService) {
+  DependencyInjection.model('GroupModel', function(
+    $allonsy, $processIndex, $AbstractModel, $RealTimeService, $WebCreateService
+  ) {
 
     var REALTIME_EVENTS = {
           'groups-group': {
@@ -42,6 +44,15 @@ module.exports = function() {
             'groups-see:{{members}}', 'groups-see-leaders:{{members}}'
           ]
         }],
+        CREATE_LINKS = {
+          title: 'Groups',
+          links: [{
+            url: '/groups/create',
+            image: '/public/groups/groups-web-create-thumb.png',
+            title: 'Empty group',
+            description:  'Create a new empty group as a leader.'
+          }]
+        },
 
         extend = require('extend'),
         async = require('async'),
@@ -973,6 +984,24 @@ module.exports = function() {
               callback();
             });
           });
+
+          $WebCreateService.links(function() {
+            _this.webCreateLinks.apply(this, arguments);
+          });
+        },
+
+        webCreateLinks: function(sockets, sections, callback) {
+          sockets.forEach(function(socket) {
+            if (!socket || !socket.user || !socket.user.id) {
+              return;
+            }
+
+            if (socket.user.hasPermission('groups-create')) {
+              sections.push(CREATE_LINKS);
+            }
+          });
+
+          callback();
         },
 
         fillSpecialGroups: function() {
@@ -1417,6 +1446,14 @@ module.exports = function() {
               }
 
               var sockets = $socket ? [$socket] : $RealTimeService.socketsFromOrigin('groups-all');
+
+              if (!sockets.length) {
+                if (callback) {
+                  callback();
+                }
+
+                return;
+              }
 
               sockets.forEach(function(socket) {
                 var userGroups = groups
