@@ -29,10 +29,6 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
       socket.user = user;
       socket.userSession = session;
 
-      // WinChartModel.updateChart('updateFeatureCount', {
-      //   feature: 'connectionsBeta'
-      // });
-
       if (user.id) {
         log = 'users:socket-signin:' + user.email + ':' + session.session;
 
@@ -49,31 +45,53 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
         });
 
         UserModel.callUsersSigned();
-
-        // WinChartModel.updateChart('usersConnectedBeta', {
-        //   userId: socket.user.id
-        // });
       }
 
       if (!userHasOtherSockets) {
         var hours = socket.userConnectionDate.getHours();
 
-        interval = '0-3';
-        interval = hours >= 3 ? '3-6' : interval;
-        interval = hours >= 6 ? '6-9' : interval;
-        interval = hours >= 9 ? '9-12' : interval;
-        interval = hours >= 12 ? '12-15' : interval;
-        interval = hours >= 15 ? '15-18' : interval;
-        interval = hours >= 18 ? '18-21' : interval;
-        interval = hours >= 21 ? '21-0' : interval;
+        interval = '0h-3h';
+        interval = hours >= 3 ? '3h-6h' : interval;
+        interval = hours >= 6 ? '6h-9h' : interval;
+        interval = hours >= 9 ? '9h-12h' : interval;
+        interval = hours >= 12 ? '12h-15h' : interval;
+        interval = hours >= 15 ? '15h-18h' : interval;
+        interval = hours >= 18 ? '18h-21h' : interval;
+        interval = hours >= 21 ? '21h-0h' : interval;
+      }
 
-        // WinChartModel.updateChart('updateFeatureCount', {
-        //   feature: 'connections' + interval + 'Beta'
-        // });
+      var metrics = [{
+        key: 'communityUsersSocketIn',
+        name: 'Connections',
+        description: 'New socket connection opened.'
+      }];
+
+      if (interval) {
+        metrics.push({
+          key: 'communityUsersSocketIn' + interval,
+          name: 'Connections ' + interval,
+          description: 'Connections between ' + interval.split('-').join(' and ') + ' count.'
+        });
+      }
+
+      var date = new Date(),
+          minDate = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+
+      if (!user.lastSocketDate || user.lastSocketDate < minDate) {
+        user.lastSocketDate = date.getTime();
+
+        metrics.push({
+          key: 'communityUsersUnique',
+          name: 'Connections uniques',
+          description: 'Unique connections count.'
+        });
+
+        user.save();
       }
 
       $allonsy.log('allons-y-community', log, {
         label: 'Open socket',
+        metrics: metrics,
         socket: socket,
         interval: interval
       });
@@ -118,14 +136,15 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
         duration = minutes >= 60 * 8 ? '>8h' : duration;
         duration = minutes >= 60 * 12 ? '>12h' : duration;
         duration = minutes >= 60 * 24 ? '>24h' : duration;
-
-        // WinChartModel.updateChart('updateFeatureCount', {
-        //   feature: duration
-        // });
       }
 
       $allonsy.log('allons-y-community', log, {
         label: 'Close socket <span class="accent">[' + duration + ']</span>',
+        metric: duration ? {
+          key: 'communityUsersSocketOut' + duration,
+          name: 'Connections ' + duration,
+          description: 'Connections ' + duration.replace('<', 'under ').replace('>', 'above ') + ' count.'
+        } : null,
         socket: socket,
         duration: duration
       });

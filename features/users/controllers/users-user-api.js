@@ -31,12 +31,13 @@ module.exports = [{
         id: $req.body.id
       });
 
-      // WinChartModel.updateChart('updateFeatureCount', {
-      //   feature: 'pushNotificationsClick'
-      // });
-
       $allonsy.log('allons-y-community', 'users:users:user-notification-action', {
         label: 'Action on notification',
+        metric: {
+          key: 'communityUsersNotificationAction',
+          name: 'Click notif',
+          description: 'Click on a notification.'
+        },
         req: $req,
         notification: $req.body.id
       });

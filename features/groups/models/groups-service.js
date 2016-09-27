@@ -24,12 +24,6 @@ module.exports = function() {
         });
       };
 
-      // this.updateWinChartCount = function(feature) {
-      //   $socket.emit('update(win-chart/chart)', {
-      //     feature: feature
-      //   });
-      // };
-
       this.findMembers = function(groupId, search, isLeader, callback) {
         if (!search) {
           return callback([]);

@@ -26,12 +26,13 @@ module.exports = [{
 
       UserModel.callUsersSigned();
 
-      // WinChartModel.updateChart('updateFeatureCount', {
-      //   feature: 'changeAvatar'
-      // });
-
       $allonsy.log('allons-y-community', 'users:update(users/user.avatar)', {
         label: 'Change its avatar',
+        metric: {
+          key: 'communityUsersChangeAvatar',
+          name: 'Change avatar',
+          description: 'New avatar changed for a member.'
+        },
         avatar: $message.avatar,
         socket: $socket
       });
@@ -86,12 +87,15 @@ module.exports = [{
       }
 
       user.save(function() {
-        // WinChartModel.updateChart('updateFeatureCount', {
-        //   feature: $message.subscribe ? 'pushNotificationsSubscribe' : 'pushNotificationsUnsubscribe'
-        // });
-
         $allonsy.log('allons-y-community', 'users:update(users/activeuser.pushnotifications)', {
           label: $message.subscribe ? 'Subscribe to Push Notifications' : 'Unsubscribe from Push Notifications',
+          metric: {
+            key: $message.subscribe ? 'communityUsersPushSubscribe' : 'communityUsersPushUnsubscribe',
+            name: $message.subscribe ? 'Subscribe Push notifs' : 'Unsubscribe Push notifs',
+            description: $message.subscribe ?
+              'Subscribe the browser to the push notifications' :
+              'Unsubscribe the browser from the push notifications'
+          },
           subscribe: $message.subscribe,
           endpoint: $message.endpoint,
           socket: $socket

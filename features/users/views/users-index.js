@@ -121,13 +121,6 @@
             userProfileButton.set('notificationsCount', notificationsUnviewedCount);
           }
         },
-        action: function() {
-          // var $Layout = DependencyInjection.injector.view.get('$Layout');
-
-          // if ($($Layout.rightContext().el).find('.pl-group.opened').attr('data-group') != 'group-users-profile') {
-          //   _updateWinChart('openProfile');
-          // }
-        },
         beforeGroup: function(context, $group, userBehavior, callback) {
           context.require('users-profile-context').then(callback);
         }
@@ -196,13 +189,7 @@
     });
 
     $NotificationsService.onSafe('page.actionNotification', function(args) {
-      // _updateWinChart('clickOnNotification');
-
       if (args.eventName == 'url') {
-        // if (args.eventArgs.url.match(/\/wiki/)) {
-        //   _updateWinChart('openArticleFromNotification');
-        // }
-
         window.page(args.eventArgs.url);
 
         var $Layout = DependencyInjection.injector.view.get('$Layout');
@@ -217,7 +204,7 @@
 
     $ShortcutsService.register(
       null,
-      'talentforcepedia-f2',
+      'users-f2',
       'F2',
       $i18nService._('Open your profile'),
       function(e) {

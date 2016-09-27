@@ -593,10 +593,6 @@ module.exports = function() {
                           });
 
                           pushNotificationsCount++;
-
-                          // WinChartModel.updateChart('updateFeatureCount', {
-                          //   feature: 'pushNotificationsPush'
-                          // });
                         });
                       }
                     }
@@ -609,6 +605,12 @@ module.exports = function() {
                 if (usersPushNotifications.length) {
                   $allonsy.log('allons-y-community', 'users:user-send-push-notification', {
                     label: 'Send ' + pushNotificationsCount + ' Push notifications to ' + usersPushNotifications.length + ' members',
+                    metric: {
+                      key: 'communityUsersPushNotificationsPush',
+                      name: 'Push notif',
+                      description: 'Push remote notification directly to the device.',
+                      value: pushNotificationsCount
+                    },
                     pushNotificationsCount: pushNotificationsCount,
                     users: usersPushNotifications,
                     socket: $socket
@@ -1114,12 +1116,13 @@ module.exports = function() {
             .exec(function() {
               $allonsy.log('allons-y-community', 'users:user-avatar-reminder', {
                 label: 'Gets the avatar reminder notification',
+                metric: {
+                  key: 'communityUsersAvatarReminder',
+                  name: 'Avatar reminder',
+                  description: 'Send a member notification for asking to set an avatar.'
+                },
                 socket: socket
               });
-
-              // WinChartModel.updateChart('updateFeatureCount', {
-              //   feature: 'avatarReminder'
-              // });
 
               setTimeout(function() {
                 _this.pushNotification(socket, [socket.user.id], {
@@ -1415,6 +1418,11 @@ module.exports = function() {
 
                           $allonsy.log('allons-y-community', 'users:create', {
                             label: 'Register new member',
+                            metric: {
+                              key: 'communityUsersCreate',
+                              name: 'New member',
+                              description: 'New member account created in the database.'
+                            },
                             user: user
                           });
 
@@ -1448,10 +1456,6 @@ module.exports = function() {
                                   GroupModel.refreshGroup(group);
 
                                   _this.refreshUsersGroupMembers(group.id);
-
-                                  // DependencyInjection.injector.service.get('WinChartModel').updateChart('updateFeatureCount', {
-                                  //   feature: 'newUserBeta'
-                                  // });
 
                                   session.duration = _this.sessionDuration();
 

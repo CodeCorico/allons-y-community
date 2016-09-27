@@ -82,22 +82,6 @@
       }, 'users-user:' + args.url);
     });
 
-    // MembersLayout.on('coworkerClick', function() {
-    //   MembersService.updateWinChartCount('membersClickCoworker');
-    // });
-
-    // MembersLayout.on('groupClick', function() {
-    //   MembersService.updateWinChartCount('groupsOpenFromMember');
-    // });
-
-    // MembersLayout.on('mapClick', function() {
-    //   MembersService.updateWinChartCount('membersClickMap');
-    // });
-
-    // MembersLayout.on('contributionClick', function() {
-    //   MembersService.updateWinChartCount('openArticleFromContributions');
-    // });
-
     MembersLayout.on('coworkersLoaded contributionsLoaded groupsLoaded', function() {
       _scrolls.update();
     });

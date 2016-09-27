@@ -47,12 +47,15 @@ module.exports = [{
                     'to be <span class="accent">', ($message.isLeader ? 'leader' : 'member'), '</span> ',
                     'of the group <span class="accent">', group.name, '</span>'
                   ].join(''),
+                  metric: {
+                    key: $message.isLeader ? 'communityGroupsInvitLeader' : 'communityGroupsInvitMember',
+                    name: $message.isLeader ? 'Invite Leader' : 'Invite Member',
+                    description: $message.isLeader ?
+                      'Invite a user to be leader of a group.' :
+                      'Invite a user to be member of a group'
+                  },
                   socket: $socket
                 });
-
-                // WinChartModel.updateChart('updateFeatureCount', {
-                //   feature: $message.isLeader ? 'groupsInvitLeader' : 'groupsInvitMember'
-                // });
               });
             });
         }
@@ -228,15 +231,21 @@ module.exports = [{
                 'of the group <span class="accent">', group.name, '</span>, ',
                 'invited by <span class="accent">', invitationBy.username, '</span>'
               ].join(''),
+              metric: accept ? {
+                key: isLeader ? 'communityGroupsAcceptLeader' : 'communityGroupsAcceptMember',
+                name: isLeader ? 'Accept Leader' : 'Accept Member',
+                description: isLeader ?
+                  'Accept an invitation to become leader of a group.' :
+                  'Accept an invitation to become member of a group.'
+              } : {
+                key: isLeader ? 'communityGroupsDeclineLeader' : 'communityGroupsDeclineMember',
+                name: isLeader ? 'Decline Leader' : 'Decline Member',
+                description: isLeader ?
+                  'Decline an invitation to become leader of a group.' :
+                  'Decline an invitation to become member of a group.'
+              },
               socket: $socket
             });
-
-            // WinChartModel.updateChart('updateFeatureCount', {
-            //   feature: accept ?
-            //     (isLeader ? 'groupsAcceptLeader' : 'groupsAcceptMember') :
-            //     (isLeader ? 'groupsDeclineLeader' : 'groupsDeclineMember')
-            // });
-
           });
         });
       });

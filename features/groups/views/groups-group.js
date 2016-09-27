@@ -47,10 +47,6 @@
         },
         _scrolls = null;
 
-    // GroupsGroup.on('memberClick', function() {
-    //   GroupsService.updateWinChartCount('membersOpenFromGroup');
-    // });
-
     function _membersList(members) {
       members = members || [];
 

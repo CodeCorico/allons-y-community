@@ -18,12 +18,6 @@ module.exports = function() {
         });
       };
 
-      // this.updateWinChartCount = function(feature) {
-      //   $socket.emit('update(win-chart/chart)', {
-      //     feature: feature
-      //   });
-      // };
-
     })();
 
   }]);
