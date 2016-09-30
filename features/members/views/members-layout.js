@@ -8,7 +8,7 @@
     MembersService, $RealTimeService,
     $Page, $component, $data, $done
   ) {
-    var _web = $Page.data('web'),
+    var _web = $Page.get('web'),
         MembersLayout = $component({
           data: $.extend(true, {
             hasData: false,
