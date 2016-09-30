@@ -44,8 +44,10 @@ module.exports = function() {
       }, function(err, files) {
 
         if (err || !files || !files.length || files[0].sizes < SIZES.length) {
-          $allonsy.logWarning('allons-y-community', 'grroups:groups-thumbs-factory', {
-            error: err || 'no files'
+          $allonsy.logWarning('allons-y-community', 'groups:groups-thumbs-error', {
+            error: err || 'no files',
+            group: group.id,
+            groupUrl: group.url
           });
 
           return callback();
@@ -55,9 +57,11 @@ module.exports = function() {
 
         for (var i = 0; i < SIZES.length; i++) {
           if (sizes[i].err || !sizes[i].result) {
-            $allonsy.logWarning('allons-y-community', 'users:users-thumbs-factory', {
+            $allonsy.logWarning('allons-y-community', 'users:users-thumbs-error', {
               error: sizes[i].err || 'no result',
-              scope: SIZES[i].name
+              group: group.id,
+              groupUrl: group.url,
+              size: SIZES[i].name
             });
           }
 
