@@ -8,7 +8,7 @@
     $Page, $BodyDataService, $i18nService, $NotificationsService, $RealTimeService,
     $socket, $component, $data, $done
   ) {
-    require('/public/vendor/dropzone.css')
+    require('/public/dropzone/dropzone.css')
       .then(function() {
         return require('/public/vendor/dropzone.js');
       }).then(function() {
