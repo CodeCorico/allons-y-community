@@ -77,13 +77,13 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
       var date = new Date(),
           minDate = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 
-      if (!user.lastSocketDate || user.lastSocketDate < minDate) {
+      if (user.id && (!user.lastSocketDate || user.lastSocketDate < minDate)) {
         user.lastSocketDate = date.getTime();
 
         metrics.push({
           key: 'communityUsersUnique',
-          name: 'Connections uniques',
-          description: 'Unique connections count.'
+          name: 'Unique Connections',
+          description: 'Unique connections count (don\'t count unknown users).'
         });
 
         user.save();
