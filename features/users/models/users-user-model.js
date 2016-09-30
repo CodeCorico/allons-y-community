@@ -235,9 +235,9 @@ module.exports = function() {
 
           EntityModel.registerSearchPublicData('user', this, this.searchPublicData);
 
-          try {
-            var WebLogModel = DependencyInjection.injector.model.get('WebLogModel');
+          var WebLogModel = DependencyInjection.injector.model.get('WebLogModel', true);
 
+          if (WebLogModel) {
             WebLogModel.logConverter(function() {
               _this.logConverter.apply(_this, arguments);
             });
@@ -246,7 +246,6 @@ module.exports = function() {
               _this.searchConditions.apply(_this, arguments);
             });
           }
-          catch (ex) { }
         },
 
         logConverter: function(log) {
