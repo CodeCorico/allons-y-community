@@ -157,12 +157,9 @@
         image: $Page.get('avatar')(null),
         group: 'group-users-sign',
         cls: 'users-profile-button',
+        autoOpen: 'always',
         ready: function(button) {
           userProfileButton = button;
-
-          if (DependencyInjection.injector.view.get('$Layout').get('screen') == 'screen-desktop') {
-            button.action(false);
-          }
         },
         beforeGroup: function(context, $group, userBehavior, callback) {
           context.require('users-sign-context').then(callback);
@@ -199,9 +196,7 @@
         window.page(args.eventArgs.url);
 
         var $Layout = DependencyInjection.injector.view.get('$Layout');
-        if ($Layout.get('screen') != 'screen-desktop') {
-          $Layout.rightContext().closeIfGroupOpened('group-users-profile');
-        }
+        $Layout.closeOnNotDesktop('group-users-profile');
       }
       else if (args.eventName == 'url.external') {
         window.open(args.eventArgs.url, '_blank');
