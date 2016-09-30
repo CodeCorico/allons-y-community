@@ -7,8 +7,8 @@ module.exports = [{
   ],
 
   enter: [
-    '$FaviconService', '$i18nService', '$Layout', '$context',
-  function($FaviconService, $i18nService, $Layout, $context) {
+    '$Page', '$FaviconService', '$i18nService', '$Layout', '$context',
+  function($Page, $FaviconService, $i18nService, $Layout, $context) {
     document.title = $i18nService._('Groups') + ' - ' + $Page.get('web').brand;
     $FaviconService.update('/public/groups/favicon.png');
 
