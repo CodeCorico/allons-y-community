@@ -23,15 +23,6 @@
         (MembersList.get('count') ? ':' + MembersList.get('count') : '')
       ].join('');
 
-      if (
-        (MembersList.get('type') == 'coworkers' && !MembersList.get('memberid')) ||
-        (MembersList.get('type') == 'groupleaders' && !MembersList.get('groupid')) ||
-        (MembersList.get('type') == 'groupmembers' && !MembersList.get('groupid')) ||
-        (MembersList.get('type') == 'groupinvitations' && !MembersList.get('groupid'))
-      ) {
-        return;
-      }
-
       $RealTimeService.realtimeComponent(_realtimeComponent, {
         name: _realtimeListEvent,
         update: function(event, args) {

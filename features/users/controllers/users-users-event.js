@@ -15,8 +15,6 @@ module.exports = [{
       params: typeof $message.params == 'string' && $message.params || null,
       url: $message.path
     };
-
-    // PostModel.callPostsOpened();
   }
 }, {
   event: 'call(users/notifications)',

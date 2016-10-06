@@ -149,8 +149,6 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
         duration: duration
       });
 
-      // PostModel.callPostsOpened();
-
       if (socket.user && socket.user.id) {
         UserModel.callUsersSigned();
       }

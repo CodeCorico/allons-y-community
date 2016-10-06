@@ -689,10 +689,6 @@ module.exports = function() {
               if (_this['permissions' + type].indexOf(permission) < 0) {
                 _this['permissions' + type].push(permission);
 
-                // if (permission.indexOf('{{members}}')) {
-                //   throw new Error('WHAT THE FUCK');
-                // }
-
                 someUpdated = true;
               }
             });

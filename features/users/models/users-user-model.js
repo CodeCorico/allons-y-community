@@ -24,9 +24,6 @@ module.exports = function() {
           'users-signed': {
             call: 'callUsersSigned'
           },
-          // 'users-coworkers': {
-          //   call: 'callUsersCoworkers'
-          // },
           'users-groupleaders': {
             call: 'callUsersGroupLeaders'
           },
@@ -179,39 +176,7 @@ module.exports = function() {
 
                 callback(null, _this);
               });
-          },
-
-          // populatePostsContributed: function(sort, outFormat, callback) {
-          //   var _this = this,
-          //       PostModel = DependencyInjection.injector.model.get('PostModel');
-
-          //   PostModel
-          //     .find({
-          //       id: _this.postsContributed
-          //     })
-          //     .sort(sort ? sort : {
-          //       updatedAt: 'desc'
-          //     })
-          //     .exec(function(err, posts) {
-          //       if (err) {
-          //         return callback(err);
-          //       }
-
-          //       if (!posts || !posts.length) {
-          //         callback(null, []);
-          //       }
-
-          //       if (!outFormat) {
-          //         return callback(null, postsFetched);
-          //       }
-
-          //       var postsFetched = posts.map(function(post) {
-          //         return post[outFormat]();
-          //       });
-
-          //       callback(null, postsFetched);
-          //     });
-          // }
+          }
         },
 
         init: function() {
@@ -331,10 +296,6 @@ module.exports = function() {
                 }, function() {
                   callback(null, userAvatars);
                 });
-
-                // DependencyInjection.injector.model.get('PostModel').updateMember(users[0], function(err) {
-                //   callback(err, userAvatars);
-                // });
               });
           });
         },
@@ -771,124 +732,6 @@ module.exports = function() {
           }
         },
 
-        // refreshUsersCoworkers: function(groupId, callback) {
-        //   this.callUsersCoworkers(null, null, [groupId], callback);
-        // },
-
-        // callUsersCoworkers: function($socket, eventName, args, callback) {
-        //   if (!args || args.length < 2) {
-        //     if (callback) {
-        //       callback();
-        //     }
-
-        //     return;
-        //   }
-
-        //   var _this = this,
-        //       PostModel = DependencyInjection.injector.model.get('PostModel'),
-        //       eventNamesCount = $RealTimeService.eventNamesFromCount('wiki-mostopened', 1, $socket, [args[0]]),
-        //       coworkers = [];
-
-        //   if (eventNamesCount === false) {
-        //     return;
-        //   }
-
-        //   this
-        //     .findOne({
-        //       id: args[0]
-        //     })
-        //     .exec(function(err, selectedUser) {
-        //       if (err || !selectedUser) {
-        //         if ($socket) {
-        //           $RealTimeService.fire(eventName, {
-        //             error: 'not found'
-        //           }, $socket);
-        //         }
-
-        //         if (callback) {
-        //           callback();
-        //         }
-
-        //         return;
-        //       }
-
-        //       PostModel
-        //         .find({
-        //           'contributors.id': selectedUser.id
-        //         }, {
-        //           select: ['contributors']
-        //         })
-        //         .exec(function(err, postsContributed) {
-        //           postsContributed = postsContributed || [];
-
-        //           var coworkersIds = [],
-        //               coworkersContributionsCount = {};
-
-        //           postsContributed.forEach(function(post) {
-        //             post.contributors.forEach(function(contributor) {
-        //               if (contributor.id == selectedUser.id) {
-        //                 return;
-        //               }
-
-        //               if (coworkersIds.indexOf(contributor.id) < 0) {
-        //                 coworkersIds.push(contributor.id);
-        //               }
-
-        //               coworkersContributionsCount[contributor.id] = coworkersContributionsCount[contributor.id] || 0;
-        //               coworkersContributionsCount[contributor.id]++;
-        //             });
-        //           });
-
-        //           async.waterfall([function(nextFunction) {
-        //             if (!coworkersIds.length) {
-        //               return nextFunction();
-        //             }
-
-        //             _this
-        //               .find({
-        //                 id: coworkersIds
-        //               })
-        //               .exec(function(err, users) {
-        //                 coworkers = (users || []).map(function(user) {
-        //                   return user.publicData({
-        //                     sameContributionsCount: coworkersContributionsCount[user.id]
-        //                   });
-        //                 });
-
-        //                 coworkers.sort(function(a, b) {
-        //                   return b.sameContributionsCount - a.sameContributionsCount;
-        //                 });
-
-        //                 nextFunction();
-        //               });
-
-        //           }], function() {
-
-        //             if ($socket) {
-        //               $RealTimeService.fire(eventName, {
-        //                 total: coworkers.length,
-        //                 users: coworkers
-        //               }, $socket);
-        //             }
-        //             else {
-        //               Object.keys(eventNamesCount.eventNames).forEach(function(eventName) {
-        //                 $RealTimeService.fire(eventName, {
-        //                   total: coworkers.length,
-        //                   users: !eventNamesCount.eventNames[eventName].count ?
-        //                     coworkers :
-        //                     coworkers.slice(0, eventNamesCount.eventNames[eventName].count)
-        //                 });
-        //               });
-        //             }
-
-        //             if (callback) {
-        //               callback();
-        //             }
-        //           });
-        //         });
-        //     });
-        // },
-
         callUsersGroupType: function(eventOrigin, permissionToCheck, filterMembers, $socket, eventName, args, callback) {
           if (!args || args.length < 1) {
             if (callback) {
@@ -957,7 +800,7 @@ module.exports = function() {
                   event.sockets.forEach(function(socket) {
                     if (!socket.user || !socket.user.id ||
                       (
-                        (!$socket.user.isMembersLeader || permissionToCheck != 'groups-see-leaders') &&
+                        (!socket.user.isMembersLeader || permissionToCheck != 'groups-see-leaders') &&
                         !socket.user.hasPermission(permissionToCheck + ':' + group.id)
                       )
                     ) {
@@ -1025,7 +868,7 @@ module.exports = function() {
         },
 
         fromSocket: function($socket, callback) {
-          if (!$socket.user || !$socket.user.id) {
+          if (!$socket || !$socket.user || !$socket.user.id) {
             return callback(null, null);
           }
 

@@ -12,9 +12,7 @@
     .members-layout-title:not(.prev),
     h1:not(.prev),
     .members-layout-profile-avatar:not(.prev),
-    .members-layout-groups,
-    .members-layout-contributions,
-    .members-layout-coworkers {
+    .members-layout-section {
       .transform(translateX(0));
     }
   }
@@ -23,9 +21,7 @@
     .members-layout-title:not(.prev),
     h1:not(.prev),
     .members-layout-profile-avatar:not(.prev),
-    .members-layout-groups,
-    .members-layout-contributions,
-    .members-layout-coworkers {
+    .members-layout-section {
       .transform(translateX(-100%));
     }
   }
@@ -38,9 +34,7 @@
 
     h1:not(.prev),
     .members-layout-profile-avatar:not(.prev),
-    .members-layout-groups,
-    .members-layout-contributions,
-    .members-layout-coworkers {
+    .members-layout-section {
       .no-transition();
       .transform(translateX(100%));
     }
@@ -53,9 +47,7 @@
 
     h1:not(.prev),
     .members-layout-profile-avatar:not(.prev),
-    .members-layout-groups,
-    .members-layout-contributions,
-    .members-layout-coworkers {
+    .members-layout-section {
       .transform(translateX(0));
     }
   }
@@ -160,19 +152,7 @@
     }
   }
 
-  .members-layout-groups {
-    position: relative;
-    .transform(translateX(100%));
-    .transition(all 0.55s @easeOutQuart);
-  }
-
-  .members-layout-contributions {
-    position: relative;
-    .transform(translateX(100%));
-    .transition(all 0.55s @easeOutQuart);
-  }
-
-  .members-layout-coworkers {
+  .members-layout-section {
     position: relative;
     .transform(translateX(100%));
     .transition(all 0.55s @easeOutQuart);

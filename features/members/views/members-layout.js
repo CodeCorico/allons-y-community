@@ -80,7 +80,7 @@
       }, 'users-user:' + args.url);
     });
 
-    MembersLayout.on('coworkersLoaded contributionsLoaded groupsLoaded', function() {
+    MembersLayout.on('sectionLoaded', function() {
       _scrolls.update();
     });
 
