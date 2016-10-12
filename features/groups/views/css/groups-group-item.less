@@ -12,10 +12,12 @@
   text-decoration: none;
   overflow: hidden;
   margin-top: -1px;
+  opacity: 0;
   .transform(translateX(-100%));
   .transition(all 0.4s @easeOutQuart);
 
   &.show {
+    opacity: 1;
     .transform(translateX(0));
   }
 

@@ -21,9 +21,6 @@ module.exports = function() {
           'users-user': {
             call: 'callUser'
           },
-          'users-signed': {
-            call: 'callUsersSigned'
-          },
           'users-groupleaders': {
             call: 'callUsersGroupLeaders'
           },
@@ -34,6 +31,7 @@ module.exports = function() {
             call: 'callUsersGroupInvitations'
           }
         },
+        MAX_HOME_TILES = 30,
 
         async = require('async'),
         extend = require('extend'),
@@ -41,7 +39,11 @@ module.exports = function() {
         uuid = require('node-uuid'),
         webPush = process.env.USERS_GCM && process.env.USERS_GCM == 'true' ? require('web-push') : false,
         path = require('path'),
-        _changeAvatarMethods = [];
+        _changeAvatarMethods = [],
+        _connectedMembers = {
+          total: 0
+        },
+        _homeDefaultTiles = [];
 
     require(path.resolve(__dirname, 'users-thumbs-factory-back.js'))();
     $allonsy.requireInFeatures('models/web-url-factory');
@@ -211,6 +213,20 @@ module.exports = function() {
               _this.searchConditions.apply(_this, arguments);
             });
           }
+
+          var $WebHomeService = DependencyInjection.injector.controller.get('$WebHomeService', true);
+
+          if ($WebHomeService) {
+            $WebHomeService.tilesLoader(function() {
+              _this.homeTilesLoader.apply(_this, arguments);
+            });
+
+            $WebHomeService.metric({
+              name: 'connectedMembers',
+              title: 'connected members',
+              value: 0
+            });
+          }
         },
 
         logConverter: function(log) {
@@ -228,6 +244,161 @@ module.exports = function() {
             log.userAvatarMini = log.user.avatarMini;
             log.user = this.mongo.objectId(log.user.id);
           }
+        },
+
+        homeTilesLoader: function($socket, args, callback) {
+          if (!$socket || !$socket.user) {
+            return;
+          }
+
+          var _this = this,
+              GroupModel = DependencyInjection.injector.model.get('GroupModel');
+
+          if (!$socket.user.id) {
+            GroupModel.unknownPermissions(function(permissions) {
+              _this.homeDefaultTiles($socket, permissions.permissions, function(tiles) {
+                callback(tiles);
+              });
+            });
+
+            return;
+          }
+          else {
+            this.fromSocket($socket, function(err, user) {
+              if (err || !user) {
+                return callback([]);
+              }
+
+              if (!user.homeTiles || !user.homeTiles.length) {
+                _this.homeDefaultTiles($socket, user.permissions, function(tiles) {
+                  user.homeTiles = tiles;
+
+                  if (user.homeTiles.length) {
+                    _this
+                      .update({
+                        id: user.id
+                      }, {
+                        homeTiles: user.homeTiles
+                      })
+                      .exec(function() {
+                        callback(user.homeTiles);
+                      });
+
+                    return;
+                  }
+
+                  callback(user.homeTiles);
+                });
+
+                return;
+              }
+
+              callback(user.homeTiles);
+            });
+          }
+        },
+
+        homeDefaultTile: function(tileOFunc, permissions) {
+          if (typeof tileOFunc == 'function') {
+            _homeDefaultTiles.push(tileOFunc);
+          }
+          else {
+            _homeDefaultTiles.push({
+              tile: tileOFunc,
+              permissions: permissions || null
+            });
+          }
+        },
+
+        homeDefaultTiles: function($socket, permissions, callback) {
+          permissions = permissions || [];
+
+          var tiles = [];
+
+          async.eachSeries(_homeDefaultTiles, function(defaultTile, nextDefaultTile) {
+
+            if (typeof defaultTile == 'function') {
+              defaultTile($socket, function(returnedTiles) {
+                if (returnedTiles && returnedTiles.length) {
+                  tiles = tiles.concat(returnedTiles);
+                }
+
+                nextDefaultTile();
+              });
+            }
+            else {
+              if (defaultTile.permissions && defaultTile.permissions.length) {
+                for (var i = 0; i < defaultTile.permissions.length; i++) {
+                  if (permissions.indexOf(defaultTile.permissions[i]) < 0) {
+                    return nextDefaultTile();
+                  }
+                }
+              }
+
+              tiles.push(defaultTile.tile);
+
+              nextDefaultTile();
+            }
+
+          }, function() {
+            callback(tiles);
+          });
+        },
+
+        addHomeTile: function(tile, userId, callback) {
+          callback = callback || function() { };
+
+          var _this = this;
+
+          this
+            .findOne({
+              id: userId
+            })
+            .exec(function(err, user) {
+              if (err || !user) {
+                return callback(err || 'no user');
+              }
+
+              var index = null,
+                  homeTiles = user.homeTiles || [];
+
+              for (var i = 0; i < homeTiles.length; i++) {
+                if (homeTiles[i].url == tile.url) {
+                  index = i;
+
+                  break;
+                }
+              }
+
+              if (index === null) {
+                homeTiles.push({});
+                index = homeTiles.length - 1;
+              }
+
+              homeTiles[index] = tile;
+
+              homeTiles.sort(function(a, b) {
+                return new Date(b.date) - new Date(a.date);
+              });
+
+              if (homeTiles.length > MAX_HOME_TILES) {
+                homeTiles.splice(MAX_HOME_TILES, homeTiles.length - MAX_HOME_TILES);
+              }
+
+              _this
+                .update({
+                  id: user.id
+                }, {
+                  homeTiles: homeTiles
+                })
+                .exec(function() {
+                  var $WebHomeService = DependencyInjection.injector.controller.get('$WebHomeService', true);
+
+                  if ($WebHomeService) {
+                    $WebHomeService.refreshTiles(userId);
+                  }
+                });
+            });
         },
 
         searchConditions: function(conditions, query) {
@@ -287,7 +458,6 @@ module.exports = function() {
                 }
 
                 _this.refreshUser(users[0]);
-                _this.callUsersSigned();
 
                 async.eachSeries(_changeAvatarMethods, function(method, nextMethod) {
 
@@ -305,6 +475,8 @@ module.exports = function() {
         },
 
         notifications: function(userId, callback) {
+          var _this = this;
+
           this
             .findOne({
               id: userId
@@ -336,9 +508,15 @@ module.exports = function() {
               }
 
               if (saveNeeded) {
-                return user.save(function() {
-                  callback(null, user.notifications);
-                });
+                _this
+                  .update({
+                    id: user.id
+                  }, {
+                    notifications: user.notifications
+                  })
+                  .exec(function() {
+                    callback(null, user.notifications);
+                  });
               }
 
               callback(null, user.notifications);
@@ -346,6 +524,8 @@ module.exports = function() {
         },
 
         allNotificationsViewed: function($socket, userId, fromLast, callback) {
+          var _this = this;
+
           this
             .findOne({
               id: userId
@@ -372,22 +552,30 @@ module.exports = function() {
                 return notification;
               });
 
-              user.save(function() {
-                if (callback) {
-                  callback(null, user.notifications);
-                }
+              _this
+                .update({
+                  id: user.id
+                }, {
+                  notifications: user.notifications
+                })
+                .exec(function() {
+                  if (callback) {
+                    callback(null, user.notifications);
+                  }
 
-                $allonsy.log('allons-y-community', 'users:user-model:notifications-viewed', {
-                  label: 'Read all its notifications',
-                  fromLast: !!fromLast,
-                  notification: lastNotification,
-                  socket: $socket || null
+                  $allonsy.log('allons-y-community', 'users:user-model:notifications-viewed', {
+                    label: 'Read all its notifications',
+                    fromLast: !!fromLast,
+                    notification: lastNotification,
+                    socket: $socket || null
+                  });
                 });
-              });
             });
         },
 
         lastNotificationUnnotified: function(userId, callback) {
+          var _this = this;
+
           this
             .findOne({
               id: userId
@@ -409,9 +597,15 @@ module.exports = function() {
                 if (!lastNotification.notified && !lastNotification.viewed) {
                   lastNotification.notified = true;
 
-                  user.save(function() {
-                    callback(null, lastNotification);
-                  });
+                  _this
+                    .update({
+                      id: user.id
+                    }, {
+                      notifications: user.notifications
+                    })
+                    .exec(function() {
+                      callback(null, lastNotification);
+                    });
 
                   return;
                 }
@@ -511,56 +705,62 @@ module.exports = function() {
                 user.notifications = user.notifications || [];
                 user.notifications.push(notification);
 
-                user.save(function() {
-                  if (notificationArgs.pushTitle && user.notificationsPush && user.notificationsPush.length) {
-                    var userActivity = false;
+                _this
+                  .update({
+                    id: user.id
+                  }, {
+                    notifications: user.notifications
+                  })
+                  .exec(function() {
+                    if (notificationArgs.pushTitle && user.notificationsPush && user.notificationsPush.length) {
+                      var userActivity = false;
 
-                    $SocketsService.each(function(socket) {
-                      if (socket && socket.user && socket.user.id == user.id && socket.userActivity) {
-                        userActivity = true;
+                      $SocketsService.each(function(socket) {
+                        if (socket && socket.user && socket.user.id == user.id && socket.userActivity) {
+                          userActivity = true;
 
-                        return false;
-                      }
-                    });
+                          return false;
+                        }
+                      });
 
-                    if (!userActivity) {
-                      var payload = {
-                        id: notification.id,
-                        user: user.id,
-                        title: notification.pushTitle,
-                        body: notification.pushContent,
-                        icon: notification.pushPicture
-                      };
+                      if (!userActivity) {
+                        var payload = {
+                          id: notification.id,
+                          user: user.id,
+                          title: notification.pushTitle,
+                          body: notification.pushContent,
+                          icon: notification.pushPicture
+                        };
 
-                      if (
-                        notificationArgs.eventName == 'url' ||
-                        notificationArgs.eventName == 'url.internal' ||
-                        notificationArgs.eventName == 'url.external'
-                      ) {
-                        payload.action = notificationArgs.eventArgs.url;
-                      }
+                        if (
+                          notificationArgs.eventName == 'url' ||
+                          notificationArgs.eventName == 'url.internal' ||
+                          notificationArgs.eventName == 'url.external'
+                        ) {
+                          payload.action = notificationArgs.eventArgs.url;
+                        }
 
-                      payload = JSON.stringify(payload);
+                        payload = JSON.stringify(payload);
 
-                      if (webPush) {
-                        usersPushNotifications.push(user.id);
+                        if (webPush) {
+                          usersPushNotifications.push(user.id);
 
-                        user.notificationsPush.forEach(function(notificationPush) {
-                          webPush.sendNotification(notificationPush.endpoint, {
-                            TTL: 0,
-                            userPublicKey: notificationPush.userPublicKey,
-                            userAuth: notificationPush.userAuth,
-                            payload: payload
+                          user.notificationsPush.forEach(function(notificationPush) {
+                            webPush.sendNotification(notificationPush.endpoint, {
+                              TTL: 0,
+                              userPublicKey: notificationPush.userPublicKey,
+                              userAuth: notificationPush.userAuth,
+                              payload: payload
+                            });
+
+                            pushNotificationsCount++;
                           });
-
-                          pushNotificationsCount++;
-                        });
+                        }
                       }
                     }
-                  }
 
-                  nextUser();
-                });
+                    nextUser();
+                  });
 
               }, function() {
                 if (usersPushNotifications.length) {
@@ -596,6 +796,8 @@ module.exports = function() {
         },
 
         notificationViewed: function(userId, notificationId, callback) {
+          var _this = this;
+
           this
             .findOne({
               id: userId
@@ -614,9 +816,15 @@ module.exports = function() {
                 }
               }
 
-              user.save(function() {
-                callback(null);
-              });
+              _this
+                .update({
+                  id: user.id
+                }, {
+                  notifications: user.notifications
+                })
+                .exec(function() {
+                  callback(null);
+                });
             });
         },
 
@@ -685,51 +893,6 @@ module.exports = function() {
                 callback();
               }
             });
-        },
-
-        callUsersSigned: function($socket, eventName, args, callback) {
-          eventName = eventName || 'users-signed';
-
-          var $SocketsService = DependencyInjection.injector.model.get('$SocketsService'),
-              usersSigned = [];
-
-          $SocketsService.each(function(socket) {
-            if (socket && socket.user && socket.user.id) {
-              var found = false;
-
-              usersSigned.forEach(function(user) {
-                if (user.id == socket.user.id) {
-                  found = true;
-
-                  user.socketsCount++;
-
-                  if (user.signedFrom - socket.userConnectionDate) {
-                    user.signedFrom = socket.userConnectionDate;
-                  }
-                }
-              });
-
-              if (!found) {
-                usersSigned.push(extend(true, {
-                  id: socket.user.id,
-                  socketsCount: 1,
-                  signedFrom: socket.userConnectionDate
-                }, socket.user.publicData()));
-              }
-            }
-          });
-
-          usersSigned.sort(function(a, b) {
-            return a.signedFrom - b.signedFrom;
-          });
-
-          $RealTimeService.fire(eventName, {
-            usersSigned: usersSigned
-          }, $socket || null);
-
-          if (callback) {
-            callback();
-          }
         },
 
         callUsersGroupType: function(eventOrigin, permissionToCheck, filterMembers, $socket, eventName, args, callback) {
@@ -1032,7 +1195,8 @@ module.exports = function() {
         },
 
         cleanSessions: function(user, callback) {
-          var cleanSessions = false;
+          var _this = this,
+              cleanSessions = false;
 
           user.sessions = user.sessions || [];
 
@@ -1045,9 +1209,15 @@ module.exports = function() {
           }
 
           if (cleanSessions) {
-            user.save(function() {
-              callback(user);
-            });
+            _this
+              .update({
+                id: user.id
+              }, {
+                sessions: user.sessions
+              })
+              .exec(function() {
+                callback(user);
+              });
 
             return;
           }
@@ -1104,11 +1274,17 @@ module.exports = function() {
                     });
                   }
 
-                  user.save(function() {
-                    activeSession.duration = _this.sessionDuration();
+                  _this
+                    .update({
+                      id: user.id
+                    }, {
+                      sessions: user.sessions
+                    })
+                    .exec(function() {
+                      activeSession.duration = _this.sessionDuration();
 
-                    callback(user, activeSession);
-                  });
+                      callback(user, activeSession);
+                    });
                 });
               });
             });
@@ -1146,16 +1322,22 @@ module.exports = function() {
                     user.sessions = user.sessions || [];
                     user.sessions.push(session);
 
-                    user.save(function() {
-                      session.duration = _this.sessionDuration();
+                    _this
+                      .update({
+                        id: user.id
+                      }, {
+                        sessions: user.sessions
+                      })
+                      .exec(function() {
+                        session.duration = _this.sessionDuration();
 
-                      $allonsy.log('allons-y-community', 'users:signin:' + user.email + ':' + session.session, {
-                        label: 'Signin',
-                        user: user
+                        $allonsy.log('allons-y-community', 'users:signin:' + user.email + ':' + session.session, {
+                          label: 'Signin',
+                          user: user
+                        });
+
+                        callback(null, user, session);
                       });
-
-                      callback(null, user, session);
-                    });
                   });
                 });
               });
@@ -1166,6 +1348,8 @@ module.exports = function() {
           if (!session) {
             return callback(null);
           }
+
+          var _this = this;
 
           this
             .findOne({
@@ -1189,14 +1373,20 @@ module.exports = function() {
               }
 
               if (sessionRemoved) {
-                user.save(function() {
-                  $allonsy.log('allons-y-community', 'users:signout:' + user.email + ':' + session, {
-                    label: 'Signout',
-                    user: user
-                  });
+                _this
+                  .update({
+                    id: user.id
+                  }, {
+                    sessions: user.sessions
+                  })
+                  .exec(function() {
+                    $allonsy.log('allons-y-community', 'users:signout:' + user.email + ':' + session, {
+                      label: 'Signout',
+                      user: user
+                    });
 
-                  callback(null);
-                });
+                    callback(null);
+                  });
 
                 return;
               }
@@ -1254,95 +1444,102 @@ module.exports = function() {
                           return callback(err);
                         }
 
-                        user.save(function(err) {
-                          if (err) {
-                            return callback(err);
-                          }
+                        _this
+                          .update({
+                            id: user.id
+                          }, {
+                            search1: user.search1,
+                            url: user.url
+                          })
+                          .exec(function(err) {
+                            if (err) {
+                              return callback(err);
+                            }
 
-                          $allonsy.log('allons-y-community', 'users:create', {
-                            label: 'Register new member',
-                            metric: {
-                              key: 'communityUsersCreate',
-                              name: 'New member',
-                              description: 'New member account created in the database.'
-                            },
-                            user: user
-                          });
+                            $allonsy.log('allons-y-community', 'users:create', {
+                              label: 'Register new member',
+                              metric: {
+                                key: 'communityUsersCreate',
+                                name: 'New member',
+                                description: 'New member account created in the database.'
+                              },
+                              user: user
+                            });
 
-                          var GroupModel = DependencyInjection.injector.service.get('GroupModel'),
-                              addFunc = 'addMember';
+                            var GroupModel = DependencyInjection.injector.service.get('GroupModel'),
+                                addFunc = 'addMember';
 
-                          GroupModel
-                            .findOne({
-                              special: 'members'
-                            })
-                            .exec(function(err, group) {
-                              if (err || !group) {
-                                return callback(err || 'no members group found');
-                              }
-
-                              async.waterfall([function(next) {
-                                if (!args.membersLeader) {
-                                  return next();
+                            GroupModel
+                              .findOne({
+                                special: 'members'
+                              })
+                              .exec(function(err, group) {
+                                if (err || !group) {
+                                  return callback(err || 'no members group found');
                                 }
 
-                                GroupModel.membersHasLeaderfunction(function(value) {
-                                  if (!value) {
-                                    addFunc = 'addLeader';
-                                  }
-
-                                  next();
-                                });
-                              }, function(next) {
-
-                                group[addFunc](user, true, function() {
-                                  GroupModel.refreshGroup(group);
-
-                                  _this.refreshUsersGroupMembers(group.id);
-
-                                  session.duration = _this.sessionDuration();
-
-                                  if (addFunc == 'addMember') {
+                                async.waterfall([function(next) {
+                                  if (!args.membersLeader) {
                                     return next();
                                   }
 
-                                  async.mapSeries(GroupModel.SPECIALS, function(specialData, nextGroup) {
-                                    if (specialData.special == 'members') {
-                                      return nextGroup();
+                                  GroupModel.membersHasLeaderfunction(function(value) {
+                                    if (!value) {
+                                      addFunc = 'addLeader';
                                     }
 
-                                    GroupModel
-                                      .findOne({
-                                        special: specialData.special
-                                      })
-                                      .exec(function(err, group) {
-                                        if (err || !group) {
-                                          return nextGroup();
-                                        }
-
-                                        group.addLeader(user, true, function() {
-                                          GroupModel.refreshGroup(group);
-
-                                          _this.refreshUsersGroupMembers(group.id);
-
-                                          nextGroup();
-                                        });
-                                      });
-
-                                  }, next);
-                                });
-                              }], function() {
-                                _this
-                                  .findOne({
-                                    id: user.id
-                                  })
-                                  .exec(function(err, user) {
-                                    callback(null, user, session);
+                                    next();
                                   });
-                              });
-                            });
+                                }, function(next) {
 
-                        });
+                                  group[addFunc](user, true, function() {
+                                    GroupModel.refreshGroup(group);
+
+                                    _this.refreshUsersGroupMembers(group.id);
+
+                                    session.duration = _this.sessionDuration();
+
+                                    if (addFunc == 'addMember') {
+                                      return next();
+                                    }
+
+                                    async.mapSeries(GroupModel.SPECIALS, function(specialData, nextGroup) {
+                                      if (specialData.special == 'members') {
+                                        return nextGroup();
+                                      }
+
+                                      GroupModel
+                                        .findOne({
+                                          special: specialData.special
+                                        })
+                                        .exec(function(err, group) {
+                                          if (err || !group) {
+                                            return nextGroup();
+                                          }
+
+                                          group.addLeader(user, true, function() {
+                                            GroupModel.refreshGroup(group);
+
+                                            _this.refreshUsersGroupMembers(group.id);
+
+                                            nextGroup();
+                                          });
+                                        });
+
+                                    }, next);
+                                  });
+                                }], function() {
+                                  _this
+                                    .findOne({
+                                      id: user.id
+                                    })
+                                    .exec(function(err, user) {
+                                      callback(null, user, session);
+                                    });
+                                });
+                              });
+
+                          });
                       });
 
                     });
@@ -1385,26 +1582,33 @@ module.exports = function() {
                   user.forgotCode = code;
                   user.forgotCodeCreatedAt = new Date();
 
-                  user.save(function() {
-                    callback(null, email);
+                  _this
+                    .update({
+                      id: user.id
+                    }, {
+                      forgotCode: user.forgotCode,
+                      forgotCodeCreatedAt: user.forgotCodeCreatedAt
+                    })
+                    .exec(function() {
+                      callback(null, email);
 
-                    var $MailModel = DependencyInjection.injector.model.get('$MailModel');
+                      var $MailModel = DependencyInjection.injector.model.get('$MailModel');
 
-                    new $MailModel()
-                      .to(user.email)
-                      .template('default')
-                      .subject('Your validation code')
-                      .data({
-                        context: process.env.WEB_BRAND + ' > LOGIN',
-                        title: 'SECURITY',
-                        subtitle: 'You have lost your password.',
-                        content: [
-                          '<p>Hello we have received a request to reset your password for ', process.env.EXPRESS_URL, '.</p>',
-                          '<p>Please use the following code to validate this request: <strong>' + code + '</strong></p>'
-                        ].join('')
-                      })
-                      .send();
-                  });
+                      new $MailModel()
+                        .to(user.email)
+                        .template('default')
+                        .subject('Your validation code')
+                        .data({
+                          context: process.env.WEB_BRAND + ' > LOGIN',
+                          title: 'SECURITY',
+                          subtitle: 'You have lost your password.',
+                          content: [
+                            '<p>Hello we have received a request to reset your password for ', process.env.EXPRESS_URL, '.</p>',
+                            '<p>Please use the following code to validate this request: <strong>' + code + '</strong></p>'
+                          ].join('')
+                        })
+                        .send();
+                    });
                 });
               });
           });
@@ -1476,9 +1680,17 @@ module.exports = function() {
                   user.forgotCodeCreatedAt = null;
                   user.password = hash;
 
-                  user.save(function() {
-                    callback(null);
-                  });
+                  _this
+                    .update({
+                      id: user.id
+                    }, {
+                      forgotCode: user.forgotCode,
+                      forgotCodeCreatedAt: user.forgotCodeCreatedAt,
+                      password: user.password
+                    })
+                    .exec(function() {
+                      callback(null);
+                    });
                 });
               });
           });
@@ -1519,6 +1731,39 @@ module.exports = function() {
                 });
               });
             });
+        },
+
+        connectedMembers: function(userId, remove) {
+          if (!_connectedMembers[userId] && remove) {
+            return;
+          }
+
+          var toUpdate = !_connectedMembers[userId];
+
+          _connectedMembers[userId] = _connectedMembers[userId] || 0;
+          _connectedMembers[userId] += remove ? -1 : 1;
+
+          if (!_connectedMembers[userId]) {
+            _connectedMembers.total--;
+            toUpdate = true;
+
+            delete _connectedMembers[userId];
+          }
+          else if (toUpdate) {
+            _connectedMembers.total++;
+          }
+
+          if (!toUpdate) {
+            return;
+          }
+
+          var $WebHomeService = DependencyInjection.injector.controller.get('$WebHomeService', true);
+
+          if (!$WebHomeService) {
+            return;
+          }
+
+          $WebHomeService.metric('connectedMembers', _connectedMembers.total);
         }
       };
 

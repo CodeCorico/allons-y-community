@@ -53,6 +53,16 @@ module.exports = function() {
             description:  'Create a new empty group as a leader.'
           }]
         },
+        GROUPS_HOME_TILE = {
+          url: '/groups',
+          cover: '/public/groups/groups-home.jpg',
+          large: true,
+          centered: {
+            title: 'GROUPS'
+          }
+        },
+        GROUPS_URL_PATTERN = /^\/groups\/?$/,
+        GROUPS_ITEM_URL_PATTERN = /^\/groups\/(?!create\/?$)(.+?)\/?$/,
 
         extend = require('extend'),
         async = require('async'),
@@ -288,6 +298,8 @@ module.exports = function() {
 
           addMembers: function(members, flush, callback) {
             var _this = this,
+                GroupModel = DependencyInjection.injector.model.get('GroupModel'),
+                UserModel = DependencyInjection.injector.model.get('UserModel'),
                 membersAddGroup = [];
 
             _this.members = _this.members || [];
@@ -317,28 +329,40 @@ module.exports = function() {
               return callback(null, _this);
             }
 
-            _this.save(function(err) {
-              if (err) {
-                return callback(err);
-              }
-
-              async.eachSeries(membersAddGroup, function(member, nextMember) {
-                member.groups = member.groups || [];
-
-                member.groups.push(_formatMemberGroup(_this));
-
-                member.save(function() {
-                  nextMember();
-                });
-
-              }, function() {
-                if (!flush) {
-                  return callback(null, _this);
+            GroupModel
+              .update({
+                id: _this.id
+              }, {
+                members: _this.members
+              })
+              .exec(function(err) {
+                if (err) {
+                  return callback(err);
                 }
 
-                _this.flushPermissions(membersAddGroup, callback);
+                async.eachSeries(membersAddGroup, function(member, nextMember) {
+                  member.groups = member.groups || [];
+
+                  member.groups.push(_formatMemberGroup(_this));
+
+                  UserModel
+                    .update({
+                      id: member.id
+                    }, {
+                      groups: member.groups
+                    })
+                    .exec(function() {
+                      nextMember();
+                    });
+
+                }, function() {
+                  if (!flush) {
+                    return callback(null, _this);
+                  }
+
+                  _this.flushPermissions(membersAddGroup, callback);
+                });
               });
-            });
           },
 
           addMember: function(member, flush, callback) {
@@ -346,7 +370,9 @@ module.exports = function() {
           },
 
           removeMembers: function(members, flush, callback) {
-            var _this = this;
+            var _this = this,
+                GroupModel = DependencyInjection.injector.model.get('GroupModel'),
+                UserModel = DependencyInjection.injector.model.get('UserModel');
 
             _this.members = _this.members || [];
 
@@ -365,18 +391,31 @@ module.exports = function() {
                 }
               }
 
-              member.save(nextMember);
+              UserModel
+                .update({
+                  id: member.id
+                }, {
+                  groups: member.groups
+                })
+                .exec(function() {
+                  nextMember();
+                });
 
             }, function() {
 
-              _this.save(function() {
-                if (!flush) {
-                  return callback(null, _this);
-                }
+              GroupModel
+                .update({
+                  id: _this.id
+                }, {
+                  members: _this.members
+                })
+                .exec(function() {
+                  if (!flush) {
+                    return callback(null, _this);
+                  }
 
-                _this.flushPermissions(members, callback);
-              });
-
+                  _this.flushPermissions(members, callback);
+                });
             });
           },
 
@@ -386,6 +425,8 @@ module.exports = function() {
 
           addLeaders: function(leaders, flush, callback) {
             var _this = this,
+                GroupModel = DependencyInjection.injector.model.get('GroupModel'),
+                UserModel = DependencyInjection.injector.model.get('UserModel'),
                 membersAddGroupLeader = [];
 
             this.addMembers(leaders, false, function(err, group) {
@@ -412,34 +453,46 @@ module.exports = function() {
                 return callback(null, group);
               }
 
-              group.save(function(err) {
-                if (err) {
-                  return callback(err);
-                }
+              GroupModel
+                .update({
+                  id: group.id
+                }, {
+                  members: group.members
+                })
+                .exec(function(err) {
+                  if (err) {
+                    return callback(err);
+                  }
 
-                async.eachSeries(membersAddGroupLeader, function(leader, nextLeader) {
-                  leader.groups = leader.groups || [];
+                  async.eachSeries(membersAddGroupLeader, function(leader, nextLeader) {
+                    leader.groups = leader.groups || [];
 
-                  for (var i = 0; i < leader.groups.length; i++) {
-                    if (leader.groups[i].id == group.id) {
-                      leader.groups[i].isLeader = true;
+                    for (var i = 0; i < leader.groups.length; i++) {
+                      if (leader.groups[i].id == group.id) {
+                        leader.groups[i].isLeader = true;
 
-                      break;
+                        break;
+                      }
                     }
-                  }
 
-                  leader.save(function() {
-                    nextLeader();
+                    UserModel
+                      .update({
+                        id: leader.id
+                      }, {
+                        groups: leader.groups
+                      })
+                      .exec(function() {
+                        nextLeader();
+                      });
+
+                  }, function() {
+                    if (!flush) {
+                      return callback(null, _this);
+                    }
+
+                    _this.flushPermissions(membersAddGroupLeader, callback);
                   });
-
-                }, function() {
-                  if (!flush) {
-                    return callback(null, _this);
-                  }
-
-                  _this.flushPermissions(membersAddGroupLeader, callback);
                 });
-              });
             });
           },
 
@@ -450,6 +503,7 @@ module.exports = function() {
           addDeactivatedMembers: function(leader, members, flush, callback) {
             var _this = this,
                 GroupModel = DependencyInjection.injector.model.get('GroupModel'),
+                UserModel = DependencyInjection.injector.model.get('UserModel'),
                 $SocketsService = DependencyInjection.injector.model.get('$SocketsService');
 
             async.eachSeries(members, function(member, nextUser) {
@@ -495,22 +549,38 @@ module.exports = function() {
                         }
                       }
 
-                      group.save(nextGroupId);
+                      GroupModel
+                        .update({
+                          id: group.id
+                        }, {
+                          invitations: group.invitations
+                        })
+                        .exec(function() {
+                          nextGroupId();
+                        });
                     });
 
                 }, function() {
-                  member.save(function() {
-                    _this.addMember(member, flush || false, function() {
+                  UserModel
+                    .update({
+                      id: member.id
+                    }, {
+                      sessions: member.sessions,
+                      notificationsPush: member.notificationsPush,
+                      groupsInvitations: member.groupsInvitations
+                    })
+                    .exec(function() {
+                      _this.addMember(member, flush || false, function() {
 
-                      $SocketsService.each(function(socket) {
-                        if (socket && socket.user && socket.user.id && socket.user.id == member.id) {
-                          socket.disconnect(true);
-                        }
+                        $SocketsService.each(function(socket) {
+                          if (socket && socket.user && socket.user.id && socket.user.id == member.id) {
+                            socket.disconnect(true);
+                          }
+                        });
+
+                        nextUser();
                       });
-
-                      nextUser();
                     });
-                  });
                 });
 
               });
@@ -526,6 +596,7 @@ module.exports = function() {
 
           addInvitations: function(leader, users, isLeader, callback) {
             var _this = this,
+                GroupModel = DependencyInjection.injector.model.get('GroupModel'),
                 usersToInvit = [],
                 notificationId = uuid.v1();
 
@@ -580,83 +651,96 @@ module.exports = function() {
 
             usersToInvit = usersToInvit;
 
-            _this.save(function(err) {
-              if (err) {
-                return callback(err);
-              }
+            GroupModel
+              .update({
+                id: _this.id
+              }, {
+                invitations: _this.invitations
+              })
+              .exec(function(err) {
+                if (err) {
+                  return callback(err);
+                }
 
-              var UserModel = DependencyInjection.injector.model.get('UserModel');
+                var UserModel = DependencyInjection.injector.model.get('UserModel');
 
-              async.eachSeries(usersToInvit, function(user, nextUser) {
+                async.eachSeries(usersToInvit, function(user, nextUser) {
 
-                user.groupsInvitations = user.groupsInvitations || [];
+                  user.groupsInvitations = user.groupsInvitations || [];
 
-                var invitation = _formatMemberGroup(_this);
-                invitation.notificationId = notificationId;
+                  var invitation = _formatMemberGroup(_this);
+                  invitation.notificationId = notificationId;
 
-                user.groupsInvitations.push(invitation);
+                  user.groupsInvitations.push(invitation);
 
-                user.save(nextUser);
+                  UserModel
+                    .update({
+                      id: user.id
+                    }, {
+                      groupsInvitations: user.groupsInvitations
+                    })
+                    .exec(function() {
+                      nextUser();
+                    });
 
-              }, function() {
-                UserModel.pushNotification(null, usersToInvit.map(function(user) {
-                  return user.id;
-                }), {
-                  id: notificationId,
-                  message: 'You are invited to <strong>' + _this.name + '</strong>!',
-                  content: [
-                    '<strong>' + leader.username + '</strong> ',
-                    'invites you to join ',
-                    '<strong>' + _this.name + '</strong> as ',
-                    isLeader ? 'leader' : 'member'
-                  ].join(''),
-                  picture: _this.coverMini || '/public/groups/group-mini.png',
-                  pushTitle: 'You are invited! - ' + process.env.BRAND,
-                  pushContent: leader.username + ' invites you to join ' + _this.name + ' as ' + (isLeader ? 'leader' : 'member'),
-                  pushPicture: '/public/groups/group-notification.jpg',
-                  eventName: 'url',
-                  eventArgs: {
-                    url: '/groups/' + _this.url
-                  },
-                  locked: true,
-                  buttons: [{
-                    title: 'accept',
-                    action: {
-                      type: 'socket.event',
-                      event: 'update(groups/group.invitation)',
-                      eventArgs: {
-                        groupId: _this.id,
-                        accept: true
-                      }
+                }, function() {
+                  UserModel.pushNotification(null, usersToInvit.map(function(user) {
+                    return user.id;
+                  }), {
+                    id: notificationId,
+                    message: 'You are invited to <strong>' + _this.name + '</strong>!',
+                    content: [
+                      '<strong>' + leader.username + '</strong> ',
+                      'invites you to join ',
+                      '<strong>' + _this.name + '</strong> as ',
+                      isLeader ? 'leader' : 'member'
+                    ].join(''),
+                    picture: _this.coverMini || '/public/groups/group-mini.png',
+                    pushTitle: 'You are invited! - ' + process.env.BRAND,
+                    pushContent: leader.username + ' invites you to join ' + _this.name + ' as ' + (isLeader ? 'leader' : 'member'),
+                    pushPicture: '/public/groups/group-notification.jpg',
+                    eventName: 'url',
+                    eventArgs: {
+                      url: '/groups/' + _this.url
                     },
-                    cls: 'success-bg'
-                  }, {
-                    title: 'decline',
-                    action: {
-                      type: 'socket.event',
-                      event: 'update(groups/group.invitation)',
-                      eventArgs: {
-                        groupId: _this.id,
-                        accept: false
-                      }
-                    },
-                    cls: 'warning-bg'
-                  }]
-                },  function() {
-                  callback(null, _this);
+                    locked: true,
+                    buttons: [{
+                      title: 'accept',
+                      action: {
+                        type: 'socket.event',
+                        event: 'update(groups/group.invitation)',
+                        eventArgs: {
+                          groupId: _this.id,
+                          accept: true
+                        }
+                      },
+                      cls: 'success-bg'
+                    }, {
+                      title: 'decline',
+                      action: {
+                        type: 'socket.event',
+                        event: 'update(groups/group.invitation)',
+                        eventArgs: {
+                          groupId: _this.id,
+                          accept: false
+                        }
+                      },
+                      cls: 'warning-bg'
+                    }]
+                  },  function() {
+                    callback(null, _this);
+                  });
                 });
               });
-            });
           },
 
           addInvitation: function(leader, user, isLeader, callback) {
             return this.addInvitations(leader, [user], isLeader, callback);
           },
 
-
-
           initPermissions: function(callback) {
-            var _this = this;
+            var _this = this,
+                GroupModel = DependencyInjection.injector.model.get('GroupModel');
 
             this.permissionsMembers = [];
             this.permissionsLeaders = [];
@@ -672,11 +756,19 @@ module.exports = function() {
               }
             });
 
-            this.save(callback);
+            GroupModel
+              .update({
+                id: _this.id
+              }, {
+                permissionsMembers: _this.permissionsMembers,
+                permissionsLeaders: _this.permissionsLeaders
+              })
+              .exec(callback);
           },
 
           addPermissions: function(type, permissions, flush, callback) {
             var _this = this,
+                GroupModel = DependencyInjection.injector.model.get('GroupModel'),
                 someUpdated = false;
 
             if (!permissions || !permissions.length) {
@@ -701,23 +793,30 @@ module.exports = function() {
               return;
             }
 
-            this.save(function(err) {
-              if (err) {
-                if (callback) {
-                  callback(err, _this);
+            var updateData = {};
+            updateData['permissions' + type] = this['permissions' + type];
+
+            GroupModel
+              .update({
+                id: this.id
+              }, updateData)
+              .exec(function(err) {
+                if (err) {
+                  if (callback) {
+                    callback(err, _this);
+                  }
+
+                  return;
                 }
 
-                return;
-              }
+                if (flush) {
+                  return _this.flushPermissions(null, callback);
+                }
 
-              if (flush) {
-                return _this.flushPermissions(null, callback);
-              }
-
-              if (callback) {
-                callback(null, _this);
-              }
-            });
+                if (callback) {
+                  callback(null, _this);
+                }
+              });
           },
 
           addPermissionsLinked: function(permissions, flush, callback) {
@@ -734,6 +833,7 @@ module.exports = function() {
 
           removePermissions: function(type, permissions, flush, callback) {
             var _this = this,
+                GroupModel = DependencyInjection.injector.model.get('GroupModel'),
                 someUpdated = false;
 
             this['permissions' + type] = this['permissions' + type] || [];
@@ -755,23 +855,30 @@ module.exports = function() {
               return;
             }
 
-            this.save(function(err) {
-              if (err) {
-                if (callback) {
-                  callback(err);
+            var updateData = {};
+            updateData['permissions' + type] = this['permissions' + type];
+
+            GroupModel
+              .update({
+                id: this.id
+              }, updateData)
+              .exec(function(err) {
+                if (err) {
+                  if (callback) {
+                    callback(err);
+                  }
+
+                  return;
                 }
 
-                return;
-              }
+                if (flush) {
+                  return _this.flushPermissions(null, callback);
+                }
 
-              if (flush) {
-                return _this.flushPermissions(null, callback);
-              }
-
-              if (callback) {
-                callback(null, _this);
-              }
-            });
+                if (callback) {
+                  callback(null, _this);
+                }
+              });
           },
 
           removePermissionsLinked: function(permissions, flush, callback) {
@@ -788,6 +895,7 @@ module.exports = function() {
 
           flushPermissions: function(members, callback) {
             var GroupModel = DependencyInjection.injector.model.get('GroupModel'),
+                UserModel = DependencyInjection.injector.model.get('UserModel'),
                 $SocketsService = DependencyInjection.injector.model.get('$SocketsService'),
                 _this = this,
                 cacheGroups = [],
@@ -891,15 +999,23 @@ module.exports = function() {
 
                   member.permissionsPublic = GroupModel.extractPublicPermissions(member.permissions);
 
-                  member.save(function() {
-                    $SocketsService.each(function(socket) {
-                      if (socket && socket.user && socket.user.id == member.id) {
-                        socket.user = member;
-                      }
-                    });
+                  UserModel
+                    .update({
+                      id: member.id
+                    }, {
+                      permissions: member.permissions,
+                      permissionsPublic: member.permissionsPublic,
+                      isMembersLeader: member.isMembersLeader
+                    })
+                    .exec(function() {
+                      $SocketsService.each(function(socket) {
+                        if (socket && socket.user && socket.user.id == member.id) {
+                          socket.user = member;
+                        }
+                      });
 
-                    nextMember();
-                  });
+                      nextMember();
+                    });
                 });
               }, function() {
                 callback(null, _this);
@@ -969,17 +1085,19 @@ module.exports = function() {
 
           EntityModel.registerSearchPublicData('group', this, this.searchPublicData);
 
-          if ($processIndex > 0) {
-            return;
+          if ($processIndex === 0) {
+            this.fillSpecialGroups();
           }
-
-          this.fillSpecialGroups();
 
           UserModel.onChangeAvatar(function(user, callback) {
             _this.updateMember(user, function() {
               callback();
             });
           });
+
+          UserModel.homeDefaultTile(extend(true, {
+            date: new Date()
+          }, GROUPS_HOME_TILE));
 
           $WebCreateService.links(function() {
             _this.webCreateLinks.apply(this, arguments);
@@ -1173,6 +1291,7 @@ module.exports = function() {
 
         deleteGroup: function(idOrUrl, callback) {
           var _this = this,
+              GroupModel = DependencyInjection.injector.model.get('GroupModel'),
               UserModel = DependencyInjection.injector.model.get('UserModel');
 
           this
@@ -1192,115 +1311,130 @@ module.exports = function() {
 
               group.members = [];
 
-              group.save(function(err) {
-                if (err) {
-                  return callback(err);
-                }
-
-                group.permissionsLinked = group.permissionsLinked || [];
-
-                var groupsToClean = [],
-                    groupsToCleanPermissions = {};
-
-                group.permissionsLinked.forEach(function(permission) {
-                  permission = permission.split(':');
-
-                  if (groupsToClean.indexOf(permission[1]) < 0) {
-                    groupsToClean.push(permission[1]);
+              GroupModel
+                .update({
+                  id: group.id
+                }, {
+                  members: group.members
+                })
+                .exec(function() {
+                  if (err) {
+                    return callback(err);
                   }
 
-                  groupsToCleanPermissions[permission[1]] = groupsToCleanPermissions[permission[1]] || [];
-                  groupsToCleanPermissions[permission[1]].push(permission[0] + ':' + group.id);
-                });
+                  group.permissionsLinked = group.permissionsLinked || [];
 
-                async.eachSeries(groupsToClean, function(groupToCleanId, nextGoupToClean) {
+                  var groupsToClean = [],
+                      groupsToCleanPermissions = {};
 
-                  _this
-                    .findOne({
-                      id: groupToCleanId
-                    })
-                    .exec(function(err, groupToClean) {
-                      if (err || !group) {
-                        return nextGoupToClean();
-                      }
+                  group.permissionsLinked.forEach(function(permission) {
+                    permission = permission.split(':');
 
-                      groupToClean.removePermissionsMembers(groupsToCleanPermissions[groupToCleanId], false, function() {
-                        nextGoupToClean();
-                      });
+                    if (groupsToClean.indexOf(permission[1]) < 0) {
+                      groupsToClean.push(permission[1]);
+                    }
 
-                    });
+                    groupsToCleanPermissions[permission[1]] = groupsToCleanPermissions[permission[1]] || [];
+                    groupsToCleanPermissions[permission[1]].push(permission[0] + ':' + group.id);
+                  });
 
-                }, function() {
+                  async.eachSeries(groupsToClean, function(groupToCleanId, nextGoupToClean) {
 
-                  UserModel
-                    .find({
-                      id: members.map(function(member) {
-                        return member.id;
+                    _this
+                      .findOne({
+                        id: groupToCleanId
                       })
-                    })
-                    .exec(function(err, users) {
-                      if (err) {
-                        return callback(err);
-                      }
-
-                      if (!users.length) {
-                        return callback(null);
-                      }
-
-                      (users || []).forEach(function(user) {
-                        user.groups = user.groups || [];
-
-                        for (var i = user.groups.length - 1; i >= 0; i--) {
-                          if (user.groups[i].id == group.id) {
-                            user.groups.splice(i, 1);
-
-                            break;
-                          }
+                      .exec(function(err, groupToClean) {
+                        if (err || !group) {
+                          return nextGoupToClean();
                         }
+
+                        groupToClean.removePermissionsMembers(groupsToCleanPermissions[groupToCleanId], false, function() {
+                          nextGoupToClean();
+                        });
+
                       });
 
-                      group.flushPermissions(users, function(err) {
+                  }, function() {
+
+                    UserModel
+                      .find({
+                        id: members.map(function(member) {
+                          return member.id;
+                        })
+                      })
+                      .exec(function(err, users) {
                         if (err) {
                           return callback(err);
                         }
 
-                        group.invitations = group.invitations || [];
+                        if (!users.length) {
+                          return callback(null);
+                        }
 
-                        async.eachSeries(group.invitations, function(invitation, nextInvitation) {
+                        (users || []).forEach(function(user) {
+                          user.groups = user.groups || [];
 
-                          UserModel
-                            .findOne({
-                              id: invitation.id
-                            })
-                            .exec(function(err, user) {
-                              if (err || !user) {
-                                return nextInvitation();
-                              }
+                          for (var i = user.groups.length - 1; i >= 0; i--) {
+                            if (user.groups[i].id == group.id) {
+                              user.groups.splice(i, 1);
 
-                              _this.removeInvitationFromUser(user, group.id, invitation.notificationId);
-
-                              user.save(nextInvitation);
-                            });
-                        }, function() {
-                          _this
-                            .destroy({
-                              id: group.id
-                            })
-                            .exec(function(err) {
-
-                              $allonsy.log('allons-y-community', 'groups:group-delete:' + group.id, {
-                                label: 'Delete group <span class="accent">[' + group.name + ']</span>'
-                              });
-
-                              callback(err);
-                            });
+                              break;
+                            }
+                          }
                         });
+
+                        group.flushPermissions(users, function(err) {
+                          if (err) {
+                            return callback(err);
+                          }
+
+                          group.invitations = group.invitations || [];
+
+                          async.eachSeries(group.invitations, function(invitation, nextInvitation) {
+
+                            UserModel
+                              .findOne({
+                                id: invitation.id
+                              })
+                              .exec(function(err, user) {
+                                if (err || !user) {
+                                  return nextInvitation();
+                                }
+
+                                _this.removeInvitationFromUser(user, group.id, invitation.notificationId);
+
+                                UserModel
+                                  .update({
+                                    id: user.id
+                                  }, {
+                                    groupsInvitations: user.groupsInvitations,
+                                    notifications: user.notifications,
+                                    groups: user.groups
+                                  })
+                                  .exec(function() {
+                                    nextInvitation();
+                                  });
+                              });
+                          }, function() {
+                            _this
+                              .destroy({
+                                id: group.id
+                              })
+                              .exec(function(err) {
+                                $allonsy.log('allons-y-community', 'groups:group-delete:' + group.id, {
+                                  label: 'Delete group <span class="accent">[' + group.name + ']</span>'
+                                });
+
+                                callback(err);
+                              });
+                          });
+                        });
+
                       });
 
-                    });
-
+                  });
                 });
-              });
             });
         },
 
@@ -1329,6 +1463,8 @@ module.exports = function() {
         },
 
         updateMember: function(member, callback) {
+          var GroupModel = DependencyInjection.injector.model.get('GroupModel');
+
           member.groups = member.groups || [];
           member.groupsInvitations = member.groupsInvitations || [];
 
@@ -1372,7 +1508,16 @@ module.exports = function() {
                   }
                 }
 
-                group.save(nextGroup);
+                GroupModel
+                  .update({
+                    id: group.id
+                  }, {
+                    members: group.members,
+                    invitations: group.invitations
+                  })
+                  .exec(function() {
+                    nextGroup();
+                  });
               }, function() {
                 callback(null);
               });
@@ -1831,6 +1976,60 @@ module.exports = function() {
 
               callback(false);
             });
+        },
+
+        groupsOpened: function($socket, url) {
+          var _this = this,
+              UserModel = DependencyInjection.injector.model.get('UserModel'),
+              match = url && url.match(GROUPS_ITEM_URL_PATTERN) || false,
+              matchGroups = !match && url && url.match(GROUPS_URL_PATTERN) || false;
+
+          if (!$socket || !$socket.user || !$socket.user.id || !match && !matchGroups) {
+            return;
+          }
+
+          var tile = null;
+
+          async.waterfall([function(next) {
+            if (matchGroups) {
+              tile = extend(true, {
+                date: new Date()
+              }, GROUPS_HOME_TILE);
+
+              return next();
+            }
+
+            var groupUrl = match[1].split('/')[0];
+
+            _this
+              .findOne({
+                url: groupUrl
+              })
+              .exec(function(err, group) {
+                if (err || !group) {
+                  return;
+                }
+
+                tile = {
+                  date: new Date(),
+                  url: '/groups/' + groupUrl,
+                  cover: group.coverThumb || '/public/groups/group.png',
+                  details: {
+                    title: group.name,
+                    text: group.description
+                  }
+                };
+
+                next();
+              });
+
+          }, function() {
+            if (!tile) {
+              return;
+            }
+
+            UserModel.addHomeTile(tile, $socket.user.id);
+          }]);
         }
       };
 

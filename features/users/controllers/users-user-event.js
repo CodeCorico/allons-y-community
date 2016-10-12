@@ -24,8 +24,6 @@ module.exports = [{
       $socket.user.avatarMini = userAvatars.avatarMini || null;
       $socket.user.avatarThumbSquare = userAvatars.avatarThumbSquare || null;
 
-      UserModel.callUsersSigned();
-
       $allonsy.log('allons-y-community', 'users:update(users/user.avatar)', {
         label: 'Change its avatar',
         metric: {
@@ -86,21 +84,27 @@ module.exports = [{
         return;
       }
 
-      user.save(function() {
-        $allonsy.log('allons-y-community', 'users:update(users/activeuser.pushnotifications)', {
-          label: $message.subscribe ? 'Subscribe to Push Notifications' : 'Unsubscribe from Push Notifications',
-          metric: {
-            key: $message.subscribe ? 'communityUsersPushSubscribe' : 'communityUsersPushUnsubscribe',
-            name: $message.subscribe ? 'Subscribe Push notifs' : 'Unsubscribe Push notifs',
-            description: $message.subscribe ?
-              'Subscribe the browser to the push notifications' :
-              'Unsubscribe the browser from the push notifications'
-          },
-          subscribe: $message.subscribe,
-          endpoint: $message.endpoint,
-          socket: $socket
+      UserModel
+        .update({
+          id: user.id
+        }, {
+          notificationsPush: user.notificationsPush
+        })
+        .exec(function() {
+          $allonsy.log('allons-y-community', 'users:update(users/activeuser.pushnotifications)', {
+            label: $message.subscribe ? 'Subscribe to Push Notifications' : 'Unsubscribe from Push Notifications',
+            metric: {
+              key: $message.subscribe ? 'communityUsersPushSubscribe' : 'communityUsersPushUnsubscribe',
+              name: $message.subscribe ? 'Subscribe Push notifs' : 'Unsubscribe Push notifs',
+              description: $message.subscribe ?
+                'Subscribe the browser to the push notifications' :
+                'Unsubscribe the browser from the push notifications'
+            },
+            subscribe: $message.subscribe,
+            endpoint: $message.endpoint,
+            socket: $socket
+          });
         });
-      });
     });
   }
 }, {

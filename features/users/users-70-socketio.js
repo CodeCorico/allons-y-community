@@ -30,6 +30,8 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
       socket.userSession = session;
 
       if (user.id) {
+        UserModel.connectedMembers(user.id);
+
         log = 'users:socket-signin:' + user.email + ':' + session.session;
 
         $SocketsService.each(function(socketInLoop) {
@@ -43,8 +45,6 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
             socket.userConnectionDate = socketInLoop.userConnectionDate;
           }
         });
-
-        UserModel.callUsersSigned();
       }
 
       if (!userHasOtherSockets) {
@@ -86,7 +86,13 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
           description: 'Unique connections count (don\'t count unknown users).'
         });
 
-        user.save();
+        UserModel
+          .update({
+            id: user.id
+          }, {
+            lastSocketDate: user.lastSocketDate
+          })
+          .exec(function() { });
       }
 
       $allonsy.log('allons-y-community', log, {
@@ -114,6 +120,8 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
           duration = null;
 
       if (socket.user && socket.user.id) {
+        UserModel.connectedMembers(socket.user.id, true);
+
         log = 'users:socket-signout:' + socket.user.email + ':' + session;
 
         $SocketsService.each(function(socketInLoop) {
@@ -148,10 +156,6 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
         socket: socket,
         duration: duration
       });
-
-      if (socket.user && socket.user.id) {
-        UserModel.callUsersSigned();
-      }
     });
 
   });

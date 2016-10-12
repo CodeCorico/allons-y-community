@@ -1,6 +1,17 @@
 'use strict';
 
 module.exports = [{
+  event: 'update(web/route)',
+  controller: function($socket, GroupModel, $message) {
+    if (!this.validMessage($message, {
+      path: ['string', 'filled']
+    })) {
+      return;
+    }
+
+    GroupModel.groupsOpened($socket, $message.path);
+  }
+}, {
   event: 'create(groups/group.invitation)',
   isMember: true,
   controller: function($allonsy, $socket, GroupModel, UserModel, $SocketsService, $message) {
@@ -113,27 +124,30 @@ module.exports = [{
 
             GroupModel.removeInvitationFromUser(user, group.id);
 
-            user.save(function() {
-              if (!accept) {
-                group.save(function(err) {
-                  if (err) {
-                    return;
-                  }
+            UserModel
+              .update({
+                id: user.id
+              }, {
+                groupsInvitations: user.groupsInvitations,
+                notifications: user.notifications
+              })
+              .exec(function() {
+                GroupModel
+                  .update({
+                    id: group.id
+                  }, {
+                    invitations: group.invitations
+                  })
+                  .exec(function() {
+                    group[isLeader ? 'addLeader' : 'addMember'](user, true, function(err) {
+                      if (err) {
+                        return;
+                      }
 
-                  callback();
-                });
-
-                return;
-              }
-
-              group[isLeader ? 'addLeader' : 'addMember'](user, true, function(err) {
-                if (err) {
-                  return;
-                }
-
-                callback();
+                      callback();
+                    });
+                  });
               });
-            });
           });
 
         }, function(callback) {
@@ -159,13 +173,19 @@ module.exports = [{
               }
             }
 
-            user.save(function() {
-              $socket.emit('read(users/notifications)', {
+            UserModel
+              .update({
+                id: user.id
+              }, {
                 notifications: user.notifications
-              });
+              })
+              .exec(function() {
+                $socket.emit('read(users/notifications)', {
+                  notifications: user.notifications
+                });
 
-              callback();
-            });
+                callback();
+              });
           });
 
         }], function() {
