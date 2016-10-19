@@ -1638,9 +1638,7 @@ module.exports = function() {
         callGroupsMember: function($socket, eventName, args, callback) {
           eventName = eventName || 'groups-member';
 
-          var _this = this;
-
-          if (!$socket) {
+          if (!args || !args.length) {
             if (callback) {
               callback();
             }
@@ -1648,39 +1646,44 @@ module.exports = function() {
             return;
           }
 
-          var UserModel = DependencyInjection.injector.model.get('UserModel');
+          var _this = this,
+              UserModel = DependencyInjection.injector.model.get('UserModel');
 
-          UserModel.fromSocket($socket, function(err, user) {
-            if (err || !user) {
-              if (callback) {
-                callback();
-              }
-
-              return;
-            }
-
-            _this
-              .find({
-                id: user.groups.map(function(group) {
-                  return group.id;
-                })
-              })
-              .exec(function(err, groups) {
-                groups = groups.map(function(group) {
-                  group = group.publicData($socket.user, null, ['leaders', 'members', 'invitations']);
-
-                  return group;
-                });
-
-                $RealTimeService.fire(eventName, {
-                  groups: groups
-                }, $socket);
-
+          UserModel
+            .findOne({
+              id: args[0]
+            })
+            .exec(function(err, user) {
+              if (err || !user) {
                 if (callback) {
                   callback();
                 }
-              });
-          });
+
+                return;
+              }
+
+              _this
+                .find({
+                  id: user.groups.map(function(group) {
+                    return group.id;
+                  })
+                })
+                .exec(function(err, groups) {
+                  groups = groups.map(function(group) {
+                    group = group.publicData($socket.user, null, ['leaders', 'members', 'invitations']);
+
+                    return group;
+                  });
+
+                  $RealTimeService.fire(eventName, {
+                    groups: groups
+                  }, $socket);
+
+                  if (callback) {
+                    callback();
+                  }
+                });
+            });
 
         },
 
