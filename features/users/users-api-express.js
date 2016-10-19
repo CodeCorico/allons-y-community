@@ -10,7 +10,7 @@ module.exports = function($server) {
     }
 
     if (config.permissions && config.permissions.length) {
-      if (!req.user || !req.user.id || !req.user.hasPermissions(config.permissions)) {
+      if (!req.user || !req.user.hasPermissions(config.permissions)) {
         res.sendStatus(403);
 
         return false;

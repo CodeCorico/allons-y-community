@@ -8,7 +8,7 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
     }
 
     if (config.permissions && config.permissions.length) {
-      if (!socket.user || !socket.user.id || !socket.user.hasPermissions(config.permissions)) {
+      if (!socket.user || !socket.user.hasPermissions(config.permissions)) {
         return false;
       }
     }

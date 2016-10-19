@@ -424,6 +424,24 @@ module.exports = function() {
           }
         },
 
+        hasPermissions: function(user, permissions) {
+          var hasPermissions = true;
+
+          for (var i = 0; i < permissions.length; i++) {
+            if (user.permissions.indexOf(permissions[i]) < 0) {
+              hasPermissions = false;
+
+              break;
+            }
+          }
+
+          return hasPermissions;
+        },
+
+        hasPermission: function(user, permission) {
+          return this.hasPermissions(user, [permission]);
+        },
+
         names: function(callback) {
           this
             .find({}, {
@@ -1088,13 +1106,23 @@ module.exports = function() {
         },
 
         unknownUser: function(callback) {
-          var GroupModel = DependencyInjection.injector.model.get('GroupModel');
+          var _this = this,
+              GroupModel = DependencyInjection.injector.model.get('GroupModel');
 
           GroupModel.unknownPermissions(function(permissions) {
-            permissions.id = null;
-            delete permissions.permissions;
+            var user = {
+              id: null,
+              permissions: permissions.permissions,
+              permissionsPublic: permissions.permissionsPublic,
+              hasPermissions: function(permissions) {
+                return _this.hasPermissions(user, permissions);
+              },
+              hasPermission: function(permission) {
+                return _this.hasPermission(user, permission);
+              }
+            };
 
-            callback(permissions);
+            callback(user);
           });
         },
 

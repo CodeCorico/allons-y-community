@@ -3,6 +3,7 @@
 module.exports = [{
   method: 'POST',
   url: 'users/signin',
+  permissions: ['members-signin'],
   controller: function($req, $res, UserModel) {
     if (!this.validMessage($req.body, {
       email: ['string', 'filled'],
@@ -51,6 +52,7 @@ module.exports = [{
 }, {
   method: 'POST',
   url: 'users/signup',
+  permissions: ['members-signout'],
   controller: function($req, $res, $WebService, UserModel) {
     if (!this.validMessage($req.body, {
       firstname: ['string', 'filled'],
@@ -101,6 +103,7 @@ module.exports = [{
 }, {
   method: 'POST',
   url: 'users/forgot',
+  permissions: ['members-signin'],
   controller: function($req, $res, UserModel) {
     if (!this.validMessage($req.body, {
       email: ['string', 'filled']
@@ -125,6 +128,7 @@ module.exports = [{
 }, {
   method: 'POST',
   url: 'users/forgotcode',
+  permissions: ['members-signin'],
   controller: function($req, $res, UserModel) {
     if (!this.validMessage($req.body, {
       email: ['string', 'filled'],
@@ -151,6 +155,7 @@ module.exports = [{
 }, {
   method: 'POST',
   url: 'users/forgotpassword',
+  permissions: ['members-signin'],
   controller: function($req, $res, UserModel) {
     if (!this.validMessage($req.body, {
       email: ['string', 'filled'],
