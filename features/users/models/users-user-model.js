@@ -665,14 +665,14 @@ module.exports = function() {
 
                 for (var key in user) {
                   if (user.hasOwnProperty(key)) {
-                    notification.message = notificationArgs.message.replace(new RegExp('\\{' + key + '\\}', 'gi'), user[key]);
-                    notification.content = notificationArgs.content.replace(new RegExp('\\{' + key + '\\}', 'gi'), user[key]);
-                    if (notificationArgs.pushTitle) {
-                      notification.pushTitle = notificationArgs.pushTitle
+                    notification.message = notification.message.replace(new RegExp('\\{' + key + '\\}', 'gi'), user[key]);
+                    notification.content = notification.content.replace(new RegExp('\\{' + key + '\\}', 'gi'), user[key]);
+                    if (notification.pushTitle) {
+                      notification.pushTitle = notification.pushTitle
                         .replace(new RegExp('\\{' + key + '\\}', 'gi'), user[key]);
                     }
-                    if (notificationArgs.pushContent) {
-                      notification.pushContent = notificationArgs.pushContent
+                    if (notification.pushContent) {
+                      notification.pushContent = notification.pushContent
                         .replace(new RegExp('\\{' + key + '\\}', 'gi'), user[key]);
                     }
                   }
