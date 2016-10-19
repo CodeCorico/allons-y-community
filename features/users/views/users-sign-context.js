@@ -9,7 +9,7 @@
     var _user = $BodyDataService.data('user'),
         UsersSignContext = $component({
           data: $.extend(true, {
-            canSignup: _user.permissionsPublic.indexOf('members-register') > -1,
+            canSignup: _user.permissionsPublic.indexOf('members-signup') > -1,
             membersNeedsLeader: _user.membersNeedsLeader || false,
             membersLeader: _user.membersNeedsLeader || false,
             signinAvatars: null,
@@ -386,7 +386,16 @@
         return;
       }
 
-      _welcome(args.user);
+      if (args.codeNeeded) {
+        UsersSignContext.set('inPanel', 'signup-code');
+
+        setTimeout(function() {
+          _$el.layout.find('[name="codeSignup"]').focus();
+        }, 350);
+      }
+      else {
+        _welcome(args.user);
+      }
     }
 
     UsersSignContext.on('signupPress', function(event) {
@@ -419,6 +428,42 @@
       }
 
       delete data.validemail;
+
+      if (UsersSignContext.get('membersLeader')) {
+        data.membersLeader = true;
+      }
+
+      $.post('/api/users/signup', data, _readSignup);
+    });
+
+    UsersSignContext.on('signupCodePress', function(event) {
+      var charCode = event.original.charCode ? event.original.charCode : event.original.keyCode;
+
+      // Enter
+      if (charCode == 13) {
+        UsersSignContext.fire('signupCode');
+      }
+    });
+
+    UsersSignContext.on('signupCode', function() {
+      var data = {},
+          err = null;
+
+      ['code'].forEach(function(field) {
+        data[field] = _$el.layout.find('[name="' + field + 'Signup"]').val();
+
+        if (!data[field]) {
+          err = $i18nService._('Please fill the ' + field + ' field.');
+        }
+      });
+
+      if (err) {
+        return _error(err);
+      }
+
+      ['firstname', 'lastname', 'email', 'password'].forEach(function(field) {
+        data[field] = _$el.layout.find('[name="' + field + 'Signup"]').val();
+      });
 
       if (UsersSignContext.get('membersLeader')) {
         data.membersLeader = true;

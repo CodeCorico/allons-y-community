@@ -88,6 +88,15 @@
             <button class="users-sign-context-submit" on-click="signup">{{_('Signup')}}</button>
           </div>
         </div>
+
+        <div class="users-sign-context-panel">
+          <p>{{{_('We have sent you a <strong>validation code</strong> to your mailbox. Paste it here to validate you account.')}}}</p>
+          <input type="text" name="codeSignup" placeholder="{{_('Your code')}}" on-keypress="signupCodePress" class="first"/>
+
+          <div class="users-sign-context-submit-container">
+            <button class="users-sign-context-submit" on-click="signupCode">{{_('Validate the code')}}</button>
+          </div>
+        </div>
       </div>
 
       <div class="users-sign-context-message {{messageCls}} {{messageSB}}">

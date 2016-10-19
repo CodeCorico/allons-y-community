@@ -43,7 +43,8 @@ module.exports = function() {
         _connectedMembers = {
           total: 0
         },
-        _homeDefaultTiles = [];
+        _homeDefaultTiles = [],
+        _signupCodes = {};
 
     require(path.resolve(__dirname, 'users-thumbs-factory-back.js'))();
     $allonsy.requireInFeatures('models/web-url-factory');
@@ -1395,11 +1396,22 @@ module.exports = function() {
             });
         },
 
+        cleanSignupCodes: function() {
+          var date = new Date().getTime();
+
+          Object.keys(_signupCodes).forEach(function(email) {
+            if (date - _signupCodes[email].createdAt.getTime() > FORGOT_CODE_DURATION) {
+              delete _signupCodes[email];
+            }
+          });
+        },
+
         createUser: function(args, callback) {
           var _this = this,
               GroupModel = DependencyInjection.injector.model.get('GroupModel'),
               session = this.newSession();
 
+          _this.cleanSignupCodes();
           GroupModel.unknownPermissions(function(permissions) {
             if (permissions.permissions.indexOf('members-register') < 0) {
               return callback('signuppermission');
@@ -1415,6 +1427,45 @@ module.exports = function() {
                 if (user) {
                   return callback('exists');
                 }
+
+                if (args.code) {
+                  if (!_signupCodes[args.email] || _signupCodes[args.email].code != args.code) {
+                    return callback('bad code');
+                  }
+                }
+                else {
+                  var code = Math.floor(Math.random() * 1000000).toString();
+
+                  while (code.length < 6) {
+                    code = '0' + code;
+                  }
+
+                  _signupCodes[args.email] = {
+                    code: code,
+                    createdAt: new Date()
+                  };
+
+                  var $MailModel = DependencyInjection.injector.model.get('$MailModel');
+
+                  new $MailModel()
+                    .to(args.email)
+                    .template('default')
+                    .subject('Your validation code')
+                    .data({
+                      context: process.env.WEB_BRAND + ' > SIGNUP',
+                      title: 'WELCOME',
+                      subtitle: 'Hello new member!',
+                      content: [
+                        '<p>Hello we have received your request to create a member account for ', process.env.EXPRESS_URL, '.</p>',
+                        '<p>Please use the following code to validate this request: <strong>' + code + '</strong></p>'
+                      ].join('')
+                    })
+                    .send();
+
+                  return callback('code sent');
+                }
+
+                delete _signupCodes[args.email];
 
                 _this.cryptPassword(args.password, function(err, passwordHash) {
                   if (err) {
@@ -1599,7 +1650,7 @@ module.exports = function() {
                         .template('default')
                         .subject('Your validation code')
                         .data({
-                          context: process.env.WEB_BRAND + ' > LOGIN',
+                          context: process.env.WEB_BRAND + ' > SIGNIN',
                           title: 'SECURITY',
                           subtitle: 'You have lost your password.',
                           content: [

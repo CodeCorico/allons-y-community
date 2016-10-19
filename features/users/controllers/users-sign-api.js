@@ -77,6 +77,12 @@ module.exports = [{
 
     UserModel.createUser($req.body, function(err, user, session) {
       if (err) {
+        if (err == 'code sent') {
+          return $res.send({
+            codeNeeded: true
+          });
+        }
+
         return $res.send({
           error: err
         });
