@@ -1839,6 +1839,7 @@ module.exports = function() {
             createdAt: group.createdAt,
             updatedAt: group.updatedAt,
             name: group.name,
+            description: group.description,
             url: group.url,
             special: group.special,
             members: group.members || [],
