@@ -157,7 +157,7 @@
         image: $Page.get('avatar')(null),
         group: 'group-users-sign',
         cls: 'users-profile-button',
-        autoOpen: 'always',
+        autoOpen: 'main',
         ready: function(button) {
           userProfileButton = button;
         },
