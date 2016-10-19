@@ -525,6 +525,7 @@ module.exports = function() {
               }, function() {
                 member.sessions = [];
                 member.notificationsPush = [];
+                member.homeTiles = [];
 
                 var groupsIds = GroupModel.removeAllInvitationsFromUser(member);
 
