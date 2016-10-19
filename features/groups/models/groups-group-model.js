@@ -1256,6 +1256,8 @@ module.exports = function() {
         },
 
         createGroup: function(data, callback) {
+          var GroupModel = DependencyInjection.injector.model.get('GroupModel');
+
           data.search1 = data.name || null;
           data.search3 = data.description || null;
 
@@ -1274,17 +1276,26 @@ module.exports = function() {
                   return callback(err);
                 }
 
-                group.initPermissions(function(err) {
-                  if (err) {
-                    return callback(err);
-                  }
+                GroupModel
+                  .update({
+                    id: group.id
+                  }, {
+                    url: group.url
+                  })
+                  .exec(function() {
 
-                  $allonsy.log('allons-y-community', 'groups:group-create:' + group.id, {
-                    label: 'Create new group <span class="accent">[' + group.name + ']</span>'
+                    group.initPermissions(function(err) {
+                      if (err) {
+                        return callback(err);
+                      }
+
+                      $allonsy.log('allons-y-community', 'groups:group-create:' + group.id, {
+                        label: 'Create new group <span class="accent">[' + group.name + ']</span>'
+                      });
+
+                      callback(null, group);
+                    });
                   });
-
-                  callback(null, group);
-                });
               });
             });
         },
