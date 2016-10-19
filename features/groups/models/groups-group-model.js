@@ -55,7 +55,7 @@ module.exports = function() {
         },
         GROUPS_HOME_TILE = {
           url: '/groups',
-          cover: '/public/groups/groups-home.jpg',
+          cover: '/public/groups/groups-home.png',
           large: true,
           centered: {
             title: 'GROUPS'
