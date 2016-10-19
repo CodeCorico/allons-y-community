@@ -6,14 +6,14 @@ module.exports = function() {
     var MAX_NOTIFICATION_TIME = 3600 * 24 * 30, // 30 days in sec
         FORGOT_CODE_DURATION = 30 * 60 * 1000, // 30 min in ms
         PERMISSIONS = {
-          'members-register': {
-            title: 'Registration to create a new account permission.',
-            description: 'Registration to create a new account permission.',
+          'members-signup': {
+            title: 'Signup',
+            description: 'Signup to the platform.',
             isPublic: true
           },
           'members-signin': {
-            title: 'Signin permission.',
-            description: 'Signin permission.',
+            title: 'Signin',
+            description: 'Signin to the platform.',
             isPublic: true
           }
         },
@@ -1459,8 +1459,9 @@ module.exports = function() {
               session = this.newSession();
 
           _this.cleanSignupCodes();
+
           GroupModel.unknownPermissions(function(permissions) {
-            if (permissions.permissions.indexOf('members-register') < 0) {
+            if (permissions.permissions.indexOf('members-signup') < 0) {
               return callback('signuppermission');
             }
 

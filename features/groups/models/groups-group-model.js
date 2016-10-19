@@ -29,9 +29,9 @@ module.exports = function() {
         }, {
           name: 'Unknowns',
           special: 'unknowns',
-          description: 'Unsigned visitors',
+          description: 'Unsigned visitors. This group has no members.',
           permissionsMembers: [
-            'members-register', 'members-signin'
+            'members-signup', 'members-signin'
           ],
           permissionsLinked: [
             'groups-see:{{members}}', 'groups-see-leaders:{{members}}'
@@ -39,7 +39,7 @@ module.exports = function() {
         }, {
           name: 'Deactivated',
           special: 'deactivated',
-          description: 'Deactivated members',
+          description: 'Deactivated members. Every member added here is deactivated and can\'t signin again.',
           permissionsLinked: [
             'groups-see:{{members}}', 'groups-see-leaders:{{members}}'
           ]
@@ -71,32 +71,32 @@ module.exports = function() {
         _permissions = {
           'groups-create': {
             title: 'Create groups',
-            description: 'Can create new groups',
+            description: 'Can create new groups.',
             isPublic: true
           },
           'groups-see': {
             title: 'See the group',
-            description: 'Who can see this group',
+            description: 'Who can see this group.',
             requiredOnMember: true,
             requiredOnLeader: true,
             linked: true,
             isPublic: false
           },
           'groups-join-member': {
-            title: 'Join the group as member',
-            description: 'Who can ask to be invited as a member to this group',
+            title: 'Join the group as a member',
+            description: 'Who can ask to be invited as a member to this group.',
             linked: true,
             isPublic: false
           },
           'groups-join-leader': {
-            title: 'Join the group as leader',
-            description: 'Who can ask to be invited as a leader to this group',
+            title: 'Join the group as a leader',
+            description: 'Who can ask to be invited as a leader to this group.',
             linked: true,
             isPublic: false
           },
           'groups-member': {
             title: 'Group member',
-            description: 'Member of the group',
+            description: 'Member of the group.',
             requiredOnMember: true,
             requiredOnLeader: true,
             linked: true,
@@ -104,21 +104,21 @@ module.exports = function() {
           },
           'groups-leader': {
             title: 'Group leader',
-            description: 'Leader of the group',
+            description: 'Leader of the group.',
             requiredOnLeader: true,
             linked: true,
             isPublic: false
           },
           'groups-see-members': {
             title: 'See the members',
-            description: 'Who can see the members list',
+            description: 'Who can see the members list.',
             requiredOnLeader: true,
             linked: true,
             isPublic: false
           },
           'groups-see-leaders': {
             title: 'See the leaders',
-            description: 'Who can see the leaders list',
+            description: 'Who can see the leaders list.',
             requiredOnLeader: true,
             linked: true,
             isPublic: false
