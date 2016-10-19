@@ -1,5 +1,5 @@
 {
   "files": [
-    "public/members/members-index.js"
+    "./public/members/members-index.js"
   ]
 }
