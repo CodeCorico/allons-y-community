@@ -1126,6 +1126,25 @@ module.exports = function() {
           });
         },
 
+        firstConnection: function(socket) {
+          var _this = this;
+
+          setTimeout(function() {
+            _this.pushNotification(socket, socket.user.id, {
+              message: $i18nService._('Hey <strong>{firstname}</strong>, look at this!'),
+              content: $i18nService._('This is your notifications center. Toggling the <strong>push notifications</strong> switch above will make sure you receive notifications on your device even when not using the platform.'),
+              picture: '/public/users/users-notification.png',
+              pushTitle: $i18nService._('Hey {firstname}, look at this!') + ' - ' + process.env.BRAND,
+              pushContent: $i18nService._('Go to your notifications center!'),
+              pushPicture: '/public/users/users-notification.png',
+              eventName: 'url',
+              eventArgs: {
+                url: '/members'
+              }
+            });
+          }, 45000);
+        },
+
         checkAvatar: function(socket) {
           var _this = this,
               avatarReminder = socket.user.avatarReminder || null,

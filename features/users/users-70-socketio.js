@@ -78,6 +78,10 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
           minDate = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 
       if (user.id && (!user.lastSocketDate || user.lastSocketDate < minDate)) {
+        if (!user.lastSocketDate) {
+          UserModel.firstConnection(socket);
+        }
+
         user.lastSocketDate = date.getTime();
 
         metrics.push({
