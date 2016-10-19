@@ -110,17 +110,9 @@ module.exports = function() {
           notificationsPush: 'array',
 
           hasPermissions: function(permissions) {
-            var hasPermissions = true;
+            var UserModel = DependencyInjection.injector.model.get('UserModel');
 
-            for (var i = 0; i < permissions.length; i++) {
-              if (this.permissions.indexOf(permissions[i]) < 0) {
-                hasPermissions = false;
-
-                break;
-              }
-            }
-
-            return hasPermissions;
+            return UserModel.hasPermissions(this, permissions);
           },
 
           hasPermission: function(permission) {
@@ -1179,7 +1171,7 @@ module.exports = function() {
               });
 
               setTimeout(function() {
-                _this.pushNotification(socket, [socket.user.id], {
+                _this.pushNotification(socket, socket.user.id, {
                   message: $i18nService._('Hey <strong>{firstname}</strong>, let\'s show your flair!'),
                   content: $i18nService._('Dear <strong>{firstname}</strong>, we all want to see more of you. What about creating your avatar? Just click on the camera icon on the right of your name and upload a nice picture. Else, we\'ll kill the kitty. Sincerly.'),
                   picture: '/public/users/kitty.gif',
