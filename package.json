@@ -1,23 +1,27 @@
 {
   "name": "allons-y-community",
-  "version": "0.1.0",
-  "description": "",
-  "main": "index.js",
+  "version": "1.0.0",
+  "description": "Community management.",
+  "license": "MIT",
+  "homepage": "http://allons-y.io",
+  "author": "CodeCorico <hello@codecorico.com>",
+  "bugs": "https://github.com/CodeCorico/allons-y-community/issues",
   "repository": {
     "type": "git",
     "url": "https://github.com/CodeCorico/allons-y-community.git"
   },
-  "author": "CodeCorico <hello@codecorico.com>",
-  "bugs": {
-    "url": "https://github.com/CodeCorico/allons-y-community/issues"
-  },
-  "homepage": "https://github.com/CodeCorico/allons-y-community",
   "engines": {
     "node": ">=4.1",
     "npm": ">=3.2"
   },
-  "license": "MIT",
   "dependencies": {
+    "allons-y-dropzone": "^1.0.0",
+    "allons-y-entities": "^1.0.0",
+    "allons-y-mails": "^1.0.0",
+    "allons-y-moment": "^1.0.0",
+    "allons-y-now": "^1.0.0",
+    "allons-y-thumbnails": "^1.0.0",
+    "allons-y-web": "^1.0.0",
     "async": "^2.0.1",
     "bcrypt": "^0.8.7",
     "extend": "^3.0.0",
