@@ -15,6 +15,7 @@
     "npm": ">=3.2"
   },
   "dependencies": {
+    "allons-y-create": "^1.0.0",
     "allons-y-dropzone": "^1.0.0",
     "allons-y-entities": "^1.0.0",
     "allons-y-mails": "^1.0.0",
