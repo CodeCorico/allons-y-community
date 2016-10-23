@@ -52,7 +52,7 @@ module.exports = [{
 }, {
   method: 'POST',
   url: 'users/signup',
-  permissions: ['members-signout'],
+  permissions: ['members-signup'],
   controller: function($req, $res, $WebService, UserModel) {
     if (!this.validMessage($req.body, {
       firstname: ['string', 'filled'],
