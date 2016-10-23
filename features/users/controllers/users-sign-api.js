@@ -33,6 +33,48 @@ module.exports = [{
   }
 }, {
   method: 'POST',
+  url: 'users/signin-socket',
+  permissions: ['members-signin'],
+  controller: function($req, $res, $allonsy, UserModel) {
+    var _this = this;
+
+    $allonsy.sendMessage({
+      event: 'call(express/servers)'
+    }, function(message) {
+      var servers = message && message.servers || {},
+          urls = Object.keys(servers).map(function(id) {
+            return message.servers[id].url;
+          });
+
+      $res.header('Access-Control-Allow-Origin', urls.join(', '));
+      $res.header('Access-Control-Allow-Credentials', true);
+      $res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
+      $res.header('Access-Control-Allow-Headers', 'X-Requested-With');
+
+      if (!_this.validMessage($req.body, {
+        token: ['string', 'filled']
+      })) {
+        return $res.send({
+          error: 'filled'
+        });
+      }
+
+      UserModel.createSocketSession($req.body.token, function(session) {
+        if (session) {
+          $res.cookie('session', session.session, {
+            maxAge: session.duration,
+            signed: true
+          });
+        }
+
+        $res.send({
+          success: true
+        });
+      });
+    });
+  }
+}, {
+  method: 'POST',
   url: 'users/signout',
   controller: function($req, $res, UserModel) {
     UserModel.signout($req.signedCookies.session || null, function(err) {

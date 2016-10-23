@@ -1,6 +1,31 @@
 (function() {
   'use strict';
 
+  window.beforeBootstrap(['$done', function($done) {
+    var $BodyDataService = DependencyInjection.injector.view.get('$BodyDataService'),
+        socketUrl = $BodyDataService.data('sockets').url,
+        session = window.Cookies.get('session');
+
+    if (!session) {
+      return $done();
+    }
+
+    $.ajax({
+      method: 'POST',
+      url: socketUrl + '/api/users/signin-socket',
+      crossDomain: true,
+      data: {
+        token: session
+      },
+      xhrFields: {
+        withCredentials: true
+      },
+      complete: function() {
+        $done();
+      }
+    });
+  }]);
+
   window.bootstrap([
     '$Page', '$BodyDataService', '$i18nService', '$socket',
     '$RealTimeService', '$NotificationsService', '$ShortcutsService', '$done',

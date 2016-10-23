@@ -37,6 +37,7 @@ module.exports = function() {
         extend = require('extend'),
         bcrypt = require('bcrypt'),
         uuid = require('node-uuid'),
+        cookieParser = require('cookie-parser'),
         webPush = process.env.USERS_GCM && process.env.USERS_GCM == 'true' ? require('web-push') : false,
         path = require('path'),
         _changeAvatarMethods = [],
@@ -1328,6 +1329,15 @@ module.exports = function() {
                 });
               });
             });
+        },
+
+        createSocketSession: function(token, callback) {
+          var tokenUnsigned = cookieParser.signedCookie(token, process.env.EXPRESS_COOKIE_SECRET);
+
+          callback(tokenUnsigned ? {
+            session: tokenUnsigned,
+            duration: this.sessionDuration()
+          } : null);
         },
 
         signin: function(email, password, callback) {
