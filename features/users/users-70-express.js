@@ -2,6 +2,12 @@
 
 module.exports = function($server, $BodyDataService, UserModel, GroupModel) {
 
+  var web = $BodyDataService.data(null, 'web') || {};
+
+  web.pushNotifications = process.env.USERS_GCM && process.env.USERS_GCM == 'true';
+
+  $BodyDataService.data(null, 'web', web);
+
   $server.use(function(req, res, next) {
 
     UserModel.fromSession(req.signedCookies.session || null, function(user, session) {
@@ -25,12 +31,7 @@ module.exports = function($server, $BodyDataService, UserModel, GroupModel) {
           userData.membersNeedsLeader = true;
         }
 
-        var web = $BodyDataService.data('web') || {};
-
-        web.pushNotifications = process.env.USERS_GCM && process.env.USERS_GCM == 'true';
-
-        $BodyDataService.data('web', web);
-        $BodyDataService.data('user', userData);
+        $BodyDataService.data(req, 'user', userData);
 
         next();
       });
