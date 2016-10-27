@@ -217,7 +217,7 @@ module.exports = function() {
 
             $WebHomeService.metric({
               name: 'connectedMembers',
-              title: 'connected members',
+              title: 'members signed in',
               value: 0
             });
           }
@@ -1196,12 +1196,23 @@ module.exports = function() {
           return !password.match(new RegExp('(' + user.firstname + '|' + user.lastname + ')', 'gi'));
         },
 
-        createUsername: function(user) {
-          return (
+        formatUsername: function(user) {
+          ['firstname', 'lastname'].forEach(function(type) {
+            user[type] = user[type]
+              .trim()
+              .toLowerCase()
+              .replace(/\b\w/g, function(letter) {
+                return letter.toUpperCase();
+              });
+          });
+
+          user.username = (
             (user.firstname || '') +
             (user.firstname && user.lastname ? ' ' : '') +
             (user.lastname || '')
           ).trim();
+
+          return user;
         },
 
         sessionDuration: function() {
@@ -1522,11 +1533,13 @@ module.exports = function() {
                     return callback(err);
                   }
 
+                  _this.formatUsername(args);
+
                   _this
                     .create({
                       firstname: args.firstname,
                       lastname: args.lastname,
-                      username: _this.createUsername(args),
+                      username: args.username,
                       email: args.email,
                       password: passwordHash,
                       sessions: [session],
