@@ -34,7 +34,6 @@ module.exports = [{
 }, {
   method: 'POST',
   url: 'users/signin-socket',
-  permissions: ['members-signin'],
   controller: function($req, $res, $allonsy, UserModel) {
     var _this = this;
 
