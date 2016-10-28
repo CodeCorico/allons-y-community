@@ -188,8 +188,15 @@
         },
         beforeGroup: function(context, $group, userBehavior, callback) {
           context.require('users-sign-context').then(callback);
-        },
-        network: profileButtonNetwork
+        }
+      });
+
+      $socket.on('disconnect', function() {
+        profileButtonNetwork(false);
+      });
+
+      $socket.on('reconnectSigned', function() {
+        profileButtonNetwork(true);
       });
     }
 
