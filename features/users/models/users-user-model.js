@@ -106,6 +106,7 @@ module.exports = function() {
           avatarThumbVertical: 'string',
           avatarThumbSquare: 'string',
           avatarMini: 'string',
+          avatarFavicon: 'string',
           notifications: 'array',
           avatarReminder: 'date',
           notificationsPush: 'array',
@@ -455,7 +456,8 @@ module.exports = function() {
               avatarThumb: user.avatarThumb || null,
               avatarThumbVertical: user.avatarThumbVertical || null,
               avatarThumbSquare: user.avatarThumbSquare || null,
-              avatarMini: user.avatarMini || null
+              avatarMini: user.avatarMini || null,
+              avatarFavicon: user.avatarFavicon || null
             };
 
             _this
@@ -898,7 +900,9 @@ module.exports = function() {
               }
 
               $RealTimeService.fire(eventName, {
-                user: user.publicData()
+                user: user.publicData({
+                  avatarFavicon: user.avatarFavicon
+                })
               }, $socket || null);
 
               if (callback) {

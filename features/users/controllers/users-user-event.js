@@ -22,6 +22,7 @@ module.exports = [{
       $socket.user.avatarThumb = userAvatars.avatarThumb || null;
       $socket.user.avatarThumbVertical = userAvatars.avatarThumbVertical || null;
       $socket.user.avatarMini = userAvatars.avatarMini || null;
+      $socket.user.avatarFavicon = userAvatars.avatarFavicon || null;
       $socket.user.avatarThumbSquare = userAvatars.avatarThumbSquare || null;
 
       $allonsy.log('allons-y-community', 'users:update(users/user.avatar)', {

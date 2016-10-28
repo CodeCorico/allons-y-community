@@ -2,11 +2,9 @@
   'use strict';
 
   window.Ractive.controllerInjection('members-layout', [
-    'MembersService', '$RealTimeService',
-    '$Page', '$component', '$data', '$done',
+    'MembersService', '$RealTimeService', '$FaviconService', '$Page', '$component', '$data', '$done',
   function membersLayoutController(
-    MembersService, $RealTimeService,
-    $Page, $component, $data, $done
+    MembersService, $RealTimeService, $FaviconService, $Page, $component, $data, $done
   ) {
     var _web = $Page.get('web'),
         MembersLayout = $component({
@@ -67,6 +65,8 @@
 
           if (args.user) {
             document.title = args.user.username + ' - ' + _web.brand;
+
+            $FaviconService.update(args.user.avatarFavicon || '/public/members/favicon.png');
           }
 
           _changeMember(args.user, function() {

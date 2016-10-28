@@ -21,6 +21,11 @@ module.exports = function() {
           name: 'avatarMini',
           width: 50,
           height: 50
+        }, {
+          name: 'avatarFavicon',
+          width: 16,
+          height: 16,
+          rounded: true
         }],
 
         path = require('path'),
