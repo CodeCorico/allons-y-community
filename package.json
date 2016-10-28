@@ -14,15 +14,18 @@
     "node": ">=4.1",
     "npm": ">=3.2"
   },
+  "devDependencies": {
+    "allons-y-dev-chore": "^1.0.0"
+  },
   "dependencies": {
     "allons-y-dropzone": "^1.0.1",
     "allons-y-entities": "^1.0.0",
     "allons-y-mails": "^1.0.2",
     "allons-y-moment": "^1.0.0",
     "allons-y-now": "^1.0.0",
-    "allons-y-thumbnails": "^1.0.0",
+    "allons-y-thumbnails": "^1.0.1",
     "allons-y-web": "^1.0.2",
-    "allons-y-web-create": "^1.0.0",
+    "allons-y-web-create": "^1.0.1",
     "allons-y-web-help": "^1.0.0",
     "allons-y-web-home": "^1.0.1",
     "async": "^2.0.1",
