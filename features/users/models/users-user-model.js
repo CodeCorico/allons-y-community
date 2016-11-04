@@ -1202,7 +1202,7 @@ module.exports = function() {
 
         formatUsername: function(user) {
           ['firstname', 'lastname'].forEach(function(type) {
-            user[type] = user[type]
+            user[type] = (user[type] || '')
               .trim()
               .toLowerCase()
               .replace(/\b\w/g, function(letter) {
@@ -1210,11 +1210,7 @@ module.exports = function() {
               });
           });
 
-          user.username = (
-            (user.firstname || '') +
-            (user.firstname && user.lastname ? ' ' : '') +
-            (user.lastname || '')
-          ).trim();
+          user.username = (user.firstname + (user.firstname && user.lastname ? ' ' : '') + user.lastname).trim();
 
           return user;
         },
@@ -1239,6 +1235,10 @@ module.exports = function() {
         },
 
         cryptPassword: function(password, callback) {
+          if (!password) {
+            return callback('no password');
+          }
+
           bcrypt.genSalt(10, function(err, salt) {
             if (err) {
               return callback(err);
@@ -1478,7 +1478,7 @@ module.exports = function() {
           _this.cleanSignupCodes();
 
           GroupModel.unknownPermissions(function(permissions) {
-            if (permissions.permissions.indexOf('members-signup') < 0) {
+            if (!force && permissions.permissions.indexOf('members-signup') < 0) {
               return callback('signuppermission');
             }
 
@@ -1882,32 +1882,6 @@ module.exports = function() {
           }
 
           $WebHomeService.metric('connectedMembers', _connectedMembers.total);
-        },
-
-        createAndSignin: function(req, res, user, callback) {
-          if (!user || !user.email) {
-            return callback('no email');
-          }
-
-          var _this = this;
-
-          this
-            .findOne({
-              email: user.email
-            })
-            .exec(function(err, userFound) {
-              if (userFound) {
-                return _this.signin(user.email, null, callback, true);
-              }
-
-              _this.createUser({
-                email: user.email,
-                firstname: user.firstname,
-                lastname: user.lastname
-              }, function() {
-                _this.signin(user.email, null, callback, true);
-              }, true);
-            });
         }
       };
 
