@@ -33,6 +33,7 @@
     "cookie-parser": "^1.4.3",
     "extend": "^3.0.0",
     "node-uuid": "^1.4.7",
+    "request": "^2.78.0",
     "web-push": "^2.2.0"
   }
 }
