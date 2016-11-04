@@ -1,3 +1,9 @@
+<a name="1.0.8"></a>
+# [1.0.8](https://github.com/CodeCorico/allons-y-community/compare/1.0.7...1.0.8) (2016-11-04)
+
+### Features
+* **users:** add the possibility to activate the Google Recaptcha for the signup [#0fdba81](https://github.com/CodeCorico/allons-y-community/commit/0fdba81)
+
 <a name="1.0.7"></a>
 # [1.0.7](https://github.com/CodeCorico/allons-y-community/compare/1.0.6...1.0.7) (2016-11-04)
 
