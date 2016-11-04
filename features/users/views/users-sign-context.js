@@ -2,14 +2,16 @@
   'use strict';
 
   window.Ractive.controllerInjection('users-sign-context', [
-    '$i18nService', '$BodyDataService', '$socket', '$component', '$data', '$done',
+    '$Page', '$i18nService', '$BodyDataService', '$socket', '$component', '$data', '$done',
   function usersSignContext(
-    $i18nService, $BodyDataService, $socket, $component, $data, $done
+    $Page, $i18nService, $BodyDataService, $socket, $component, $data, $done
   ) {
-    var _user = $BodyDataService.data('user'),
+    var _web = $Page.get('web'),
+        _user = $BodyDataService.data('user'),
         UsersSignContext = $component({
           data: $.extend(true, {
             canSignup: _user.permissionsPublic.indexOf('members-signup') > -1,
+            useRecaptcha: _web.useRecaptcha || false,
             membersNeedsLeader: _user.membersNeedsLeader || false,
             membersLeader: _user.membersNeedsLeader || false,
             signinAvatars: null,
@@ -28,6 +30,7 @@
           signinpermission: $i18nService._('You don\'t have the permission to signin.'),
           forgotpermission: $i18nService._('You don\'t have the permission to create a new password.'),
           deactivated: $i18nService._('Your account has been deactivated.'),
+          captcha: $i18nService._('Our anti-bot system thinks you\'re a bot. Maybe you didn\'t know.'),
           password: $i18nService._([
             'Please use a password more secured:',
             '<ol>',
@@ -43,6 +46,17 @@
         },
         _searchAvatarTimeout = null,
         _lastSearchAvatarEmail = null;
+
+    if (_web.useRecaptcha) {
+      window.usersRecaptcha = function() {
+        window.grecaptcha.render($(UsersSignContext.el).find('.g-recaptcha')[0], {
+          sitekey: _web.recaptchaKey,
+          theme: 'dark'
+        });
+      };
+
+      require('https://www.google.com/recaptcha/api.js?onload=usersRecaptcha&render=explicit');
+    }
 
     function _message(message, cls) {
       message = _errors[message] ? _errors[message] : message;
@@ -414,7 +428,7 @@
       ['firstname', 'lastname', 'email', 'validemail', 'password'].forEach(function(field) {
         data[field] = _$el.layout.find('[name="' + field + 'Signup"]').val();
 
-        if (!data[field]) {
+        if (!err && !data[field]) {
           err = $i18nService._('Please fill the ' + field + ' field.');
         }
       });
@@ -428,6 +442,14 @@
       }
 
       delete data.validemail;
+
+      if (_web.useRecaptcha) {
+        data.captcha = window.grecaptcha.getResponse();
+
+        if (!data.captcha) {
+          return _error($i18nService._('Please use the anti-bot verification.'));
+        }
+      }
 
       if (UsersSignContext.get('membersLeader')) {
         data.membersLeader = true;

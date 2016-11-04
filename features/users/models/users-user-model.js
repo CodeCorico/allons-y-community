@@ -5,6 +5,7 @@ module.exports = function() {
 
     var MAX_NOTIFICATION_TIME = 3600 * 24 * 30, // 30 days in sec
         FORGOT_CODE_DURATION = 30 * 60 * 1000, // 30 min in ms
+        RECAPTCHA_SERVICE_URL = 'https://www.google.com/recaptcha/api/siteverify',
         PERMISSIONS = {
           'members-signup': {
             title: 'Signup',
@@ -1970,6 +1971,40 @@ module.exports = function() {
           }
 
           $WebHomeService.metric('connectedMembers', _connectedMembers.total);
+        },
+
+        validateCaptcha: function(captcha, ip, callback) {
+          if (!process.env.USERS_RECAPTCHA || process.env.USERS_RECAPTCHA == 'false') {
+            return callback(true);
+          }
+
+          if (!captcha || !ip) {
+            return callback(false);
+          }
+
+          var request = require('request');
+
+          request.post({
+            url: RECAPTCHA_SERVICE_URL,
+            form: {
+              secret: process.env.USERS_RECAPTCHA_SECRET_KEY,
+              response: captcha,
+              remoteip: ip
+            }
+          }, function(err, httpResponse, body) {
+            if (err || !httpResponse || !body || typeof body != 'string') {
+              return callback(false);
+            }
+
+            try {
+              body = JSON.parse(body);
+            }
+            catch (ex) {
+              return callback(false);
+            }
+
+            callback(body && body.success || false);
+          });
         }
       };
 

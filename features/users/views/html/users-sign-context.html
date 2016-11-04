@@ -75,6 +75,10 @@
           <input type="text" name="validemailSignup" placeholder="{{_('Re-enter email')}}" on-keypress="signupPress"/>
           <input type="password" name="passwordSignup" placeholder="{{_('New password')}}" on-keypress="signupPress"/>
 
+          {{#if useRecaptcha}}
+            <div class="g-recaptcha"></div>
+          {{/if}}
+
           {{#if membersNeedsLeader}}
             <rv-require
               name="pl-button-onoff"

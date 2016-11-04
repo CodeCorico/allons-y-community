@@ -118,26 +118,37 @@ module.exports = [{
       });
     }
 
-    UserModel.createUser($req.body, function(err, user, session) {
-      if (err) {
-        if (err == 'code sent') {
-          return $res.send({
-            codeNeeded: true
-          });
-        }
-
+    UserModel.validateCaptcha(
+      $req.body.code ? null : $req.body.captcha,
+      $req.headers['x-forwarded-for'] || $req.connection.remoteAddress,
+    function(success) {
+      if (!$req.body.code && !success) {
         return $res.send({
-          error: err
+          error: 'captcha'
         });
       }
 
-      $res.cookie('session', session.session, {
-        maxAge: session.duration,
-        signed: true
-      });
+      UserModel.createUser($req.body, function(err, user, session) {
+        if (err) {
+          if (err == 'code sent') {
+            return $res.send({
+              codeNeeded: true
+            });
+          }
 
-      return $res.send({
-        user: user.ownPublicData()
+          return $res.send({
+            error: err
+          });
+        }
+
+        $res.cookie('session', session.session, {
+          maxAge: session.duration,
+          signed: true
+        });
+
+        return $res.send({
+          user: user.ownPublicData()
+        });
       });
     });
   }

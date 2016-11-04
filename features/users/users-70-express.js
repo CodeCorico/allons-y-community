@@ -6,6 +6,11 @@ module.exports = function($server, $BodyDataService, UserModel, GroupModel) {
 
   web.pushNotifications = process.env.USERS_GCM && process.env.USERS_GCM == 'true';
 
+  if (process.env.USERS_RECAPTCHA && process.env.USERS_RECAPTCHA == 'true') {
+    web.useRecaptcha = true;
+    web.recaptchaKey = process.env.USERS_RECAPTCHA_PUBLIC_KEY;
+  }
+
   $BodyDataService.data(null, 'web', web);
 
   $server.use(function(req, res, next) {

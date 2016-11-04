@@ -19,5 +19,20 @@
     "name": "USERS_GCM_API_KEY",
     "message": "Google Cloud Messaging project API key:",
     "when": "USERS_GCM=true"
+  }, {
+    "type": "confirm",
+    "name": "USERS_RECAPTCHA",
+    "message": "Use Google ReCaptcha for signup security:",
+    "default": false
+  }, {
+    "type": "input",
+    "name": "USERS_RECAPTCHA_PUBLIC_KEY",
+    "message": "Google ReCaptcha public key:",
+    "when": "USERS_RECAPTCHA=true"
+  }, {
+    "type": "input",
+    "name": "USERS_RECAPTCHA_SECRET_KEY",
+    "message": "Google ReCaptcha secret key:",
+    "when": "USERS_RECAPTCHA=true"
   }]
 }
