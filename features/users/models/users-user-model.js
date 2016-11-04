@@ -45,7 +45,9 @@ module.exports = function() {
           total: 0
         },
         _homeDefaultTiles = [],
-        _signupCodes = {};
+        _signupCodes = {},
+        _canSignup = [],
+        _canSignin = [];
 
     require(path.resolve(__dirname, 'users-thumbs-factory-back.js'))();
     $allonsy.requireInFeatures('models/web-url-factory');
@@ -1361,51 +1363,60 @@ module.exports = function() {
 
           email = email.toLowerCase();
 
-          GroupModel.unknownPermissions(function(permissions) {
-            if (permissions.permissions.indexOf('members-signin') < 0) {
-              return callback('signinpermission');
+          _this.canSignin({
+            email: email,
+            password: password
+          }, function(err) {
+            if (err) {
+              return callback(err);
             }
 
-            _this
-              .findOne({
-                email: email
-              })
-              .exec(function(err, user) {
-                if (err || !user || (!force && (!user.password || !bcrypt.compareSync(password, user.password)))) {
-                  return callback(err || 'credentials');
-                }
+            GroupModel.unknownPermissions(function(permissions) {
+              if (permissions.permissions.indexOf('members-signin') < 0) {
+                return callback('signinpermission');
+              }
 
-                _this.cleanSessions(user, function(user) {
+              _this
+                .findOne({
+                  email: email
+                })
+                .exec(function(err, user) {
+                  if (err || !user || (!force && (!user.password || !bcrypt.compareSync(password, user.password)))) {
+                    return callback(err || 'credentials');
+                  }
 
-                  GroupModel.isDeactivated(user, function(isDeactivated) {
-                    if (isDeactivated) {
-                      return callback('deactivated');
-                    }
+                  _this.cleanSessions(user, function(user) {
 
-                    var session = _this.newSession();
+                    GroupModel.isDeactivated(user, function(isDeactivated) {
+                      if (isDeactivated) {
+                        return callback('deactivated');
+                      }
 
-                    user.sessions = user.sessions || [];
-                    user.sessions.push(session);
+                      var session = _this.newSession();
 
-                    _this
-                      .update({
-                        id: user.id
-                      }, {
-                        sessions: user.sessions
-                      })
-                      .exec(function() {
-                        session.duration = _this.sessionDuration();
+                      user.sessions = user.sessions || [];
+                      user.sessions.push(session);
 
-                        $allonsy.log('allons-y-community', 'users:signin:' + user.email + ':' + session.session, {
-                          label: 'Signin',
-                          user: user
+                      _this
+                        .update({
+                          id: user.id
+                        }, {
+                          sessions: user.sessions
+                        })
+                        .exec(function() {
+                          session.duration = _this.sessionDuration();
+
+                          $allonsy.log('allons-y-community', 'users:signin:' + user.email + ':' + session.session, {
+                            label: 'Signin',
+                            user: user
+                          });
+
+                          callback(null, user, session);
                         });
-
-                        callback(null, user, session);
-                      });
+                    });
                   });
                 });
-              });
+            });
           });
         },
 
@@ -1470,6 +1481,54 @@ module.exports = function() {
           });
         },
 
+        canSigninCondition(func) {
+          _canSignin.push(func);
+        },
+
+        canSignin: function(args, callback) {
+          var err = null;
+
+          async.eachSeries(_canSignin, function(func, nextSigninFunc) {
+            if (err) {
+              return nextSigninFunc();
+            }
+
+            func(args, function(error) {
+              if (error) {
+                err = error;
+              }
+
+              nextSigninFunc();
+            });
+          }, function() {
+            callback(err);
+          });
+        },
+
+        canSignupCondition(func) {
+          _canSignup.push(func);
+        },
+
+        canSignup: function(args, callback) {
+          var err = null;
+
+          async.eachSeries(_canSignup, function(func, nextSignupFunc) {
+            if (err) {
+              return nextSignupFunc();
+            }
+
+            func(args, function(error) {
+              if (error) {
+                err = error;
+              }
+
+              nextSignupFunc();
+            });
+          }, function() {
+            callback(err);
+          });
+        },
+
         createUser: function(args, callback, force) {
           var _this = this,
               GroupModel = DependencyInjection.injector.model.get('GroupModel'),
@@ -1477,192 +1536,197 @@ module.exports = function() {
 
           _this.cleanSignupCodes();
 
-          GroupModel.unknownPermissions(function(permissions) {
-            if (!force && permissions.permissions.indexOf('members-signup') < 0) {
-              return callback('signuppermission');
+          _this.canSignup(args, function(err) {
+            if (err) {
+              return callback(err);
             }
 
-            args.email = args.email.toLowerCase();
+            GroupModel.unknownPermissions(function(permissions) {
+              if (!force && permissions.permissions.indexOf('members-signup') < 0) {
+                return callback('signuppermission');
+              }
 
-            _this
-              .findOne({
-                email: args.email
-              })
-              .exec(function(err, user) {
-                if (user) {
-                  return callback('exists');
-                }
+              args.email = args.email.toLowerCase();
 
-                if (!force && args.code) {
-                  if (!_signupCodes[args.email] || _signupCodes[args.email].code != args.code) {
-                    return callback('bad code');
-                  }
-                }
-                else if (!force) {
-                  var code = Math.floor(Math.random() * 1000000).toString();
-
-                  while (code.length < 6) {
-                    code = '0' + code;
+              _this
+                .findOne({
+                  email: args.email
+                })
+                .exec(function(err, user) {
+                  if (user) {
+                    return callback('exists');
                   }
 
-                  _signupCodes[args.email] = {
-                    code: code,
-                    createdAt: new Date()
-                  };
+                  if (!force && args.code) {
+                    if (!_signupCodes[args.email] || _signupCodes[args.email].code != args.code) {
+                      return callback('bad code');
+                    }
+                  }
+                  else if (!force) {
+                    var code = Math.floor(Math.random() * 1000000).toString();
 
-                  var $MailModel = DependencyInjection.injector.model.get('$MailModel');
+                    while (code.length < 6) {
+                      code = '0' + code;
+                    }
 
-                  new $MailModel()
-                    .to(args.email)
-                    .template('default')
-                    .subject('Your validation code')
-                    .data({
-                      context: process.env.WEB_BRAND + ' > SIGNUP',
-                      title: 'WELCOME',
-                      subtitle: 'Hello new member!',
-                      content: [
-                        '<p>Hello we have received your request to create a member account for ', process.env.EXPRESS_URL, '.</p>',
-                        '<p>Please use the following code to validate this request: <strong>' + code + '</strong></p>'
-                      ].join('')
-                    })
-                    .send();
+                    _signupCodes[args.email] = {
+                      code: code,
+                      createdAt: new Date()
+                    };
 
-                  return callback('code sent');
-                }
+                    var $MailModel = DependencyInjection.injector.model.get('$MailModel');
 
-                delete _signupCodes[args.email];
+                    new $MailModel()
+                      .to(args.email)
+                      .template('default')
+                      .subject('Your validation code')
+                      .data({
+                        context: process.env.WEB_BRAND + ' > SIGNUP',
+                        title: 'WELCOME',
+                        subtitle: 'Hello new member!',
+                        content: [
+                          '<p>Hello we have received your request to create a member account for ', process.env.EXPRESS_URL, '.</p>',
+                          '<p>Please use the following code to validate this request: <strong>' + code + '</strong></p>'
+                        ].join('')
+                      })
+                      .send();
 
-                _this.cryptPassword(args.password, function(err, passwordHash) {
-                  if (!force && err) {
-                    return callback(err);
+                    return callback('code sent');
                   }
 
-                  _this.formatUsername(args);
+                  delete _signupCodes[args.email];
 
-                  _this
-                    .create({
-                      firstname: args.firstname,
-                      lastname: args.lastname,
-                      username: args.username,
-                      email: args.email,
-                      password: force ? null : passwordHash,
-                      sessions: [session],
-                      createdAt: new Date(),
-                      updatedAt: new Date()
-                    })
-                    .exec(function(err, user) {
-                      if (err) {
-                        return callback(err);
-                      }
+                  _this.cryptPassword(args.password, function(err, passwordHash) {
+                    if (!force && err) {
+                      return callback(err);
+                    }
 
-                      user.search1 = user.username;
+                    _this.formatUsername(args);
 
-                      user.createUrl(false, function(err) {
+                    _this
+                      .create({
+                        firstname: args.firstname,
+                        lastname: args.lastname,
+                        username: args.username,
+                        email: args.email,
+                        password: force ? null : passwordHash,
+                        sessions: [session],
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                      })
+                      .exec(function(err, user) {
                         if (err) {
                           return callback(err);
                         }
 
-                        _this
-                          .update({
-                            id: user.id
-                          }, {
-                            search1: user.search1,
-                            url: user.url
-                          })
-                          .exec(function(err) {
-                            if (err) {
-                              return callback(err);
-                            }
+                        user.search1 = user.username;
 
-                            $allonsy.log('allons-y-community', 'users:create', {
-                              label: 'Register new member',
-                              metric: {
-                                key: 'communityUsersCreate',
-                                name: 'New member',
-                                description: 'New member account created in the database.'
-                              },
-                              user: user
-                            });
+                        user.createUrl(false, function(err) {
+                          if (err) {
+                            return callback(err);
+                          }
 
-                            var GroupModel = DependencyInjection.injector.service.get('GroupModel'),
-                                addFunc = 'addMember';
+                          _this
+                            .update({
+                              id: user.id
+                            }, {
+                              search1: user.search1,
+                              url: user.url
+                            })
+                            .exec(function(err) {
+                              if (err) {
+                                return callback(err);
+                              }
 
-                            GroupModel
-                              .findOne({
-                                special: 'members'
-                              })
-                              .exec(function(err, group) {
-                                if (err || !group) {
-                                  return callback(err || 'no members group found');
-                                }
+                              $allonsy.log('allons-y-community', 'users:create', {
+                                label: 'Register new member',
+                                metric: {
+                                  key: 'communityUsersCreate',
+                                  name: 'New member',
+                                  description: 'New member account created in the database.'
+                                },
+                                user: user
+                              });
 
-                                async.waterfall([function(next) {
-                                  if (!args.membersLeader) {
-                                    return next();
+                              var addFunc = 'addMember';
+
+                              GroupModel
+                                .findOne({
+                                  special: 'members'
+                                })
+                                .exec(function(err, group) {
+                                  if (err || !group) {
+                                    return callback(err || 'no members group found');
                                   }
 
-                                  GroupModel.membersHasLeaderfunction(function(value) {
-                                    if (!value) {
-                                      addFunc = 'addLeader';
-                                    }
-
-                                    next();
-                                  });
-                                }, function(next) {
-
-                                  group[addFunc](user, true, function() {
-                                    GroupModel.refreshGroup(group);
-
-                                    _this.refreshUsersGroupMembers(group.id);
-
-                                    session.duration = _this.sessionDuration();
-
-                                    if (addFunc == 'addMember') {
+                                  async.waterfall([function(next) {
+                                    if (!args.membersLeader) {
                                       return next();
                                     }
 
-                                    async.mapSeries(GroupModel.SPECIALS, function(specialData, nextGroup) {
-                                      if (specialData.special == 'members') {
-                                        return nextGroup();
+                                    GroupModel.membersHasLeaderfunction(function(value) {
+                                      if (!value) {
+                                        addFunc = 'addLeader';
                                       }
 
-                                      GroupModel
-                                        .findOne({
-                                          special: specialData.special
-                                        })
-                                        .exec(function(err, group) {
-                                          if (err || !group) {
-                                            return nextGroup();
-                                          }
-
-                                          group.addLeader(user, true, function() {
-                                            GroupModel.refreshGroup(group);
-
-                                            _this.refreshUsersGroupMembers(group.id);
-
-                                            nextGroup();
-                                          });
-                                        });
-
-                                    }, next);
-                                  });
-                                }], function() {
-                                  _this
-                                    .findOne({
-                                      id: user.id
-                                    })
-                                    .exec(function(err, user) {
-                                      callback(null, user, session);
+                                      next();
                                     });
+                                  }, function(next) {
+
+                                    group[addFunc](user, true, function() {
+                                      GroupModel.refreshGroup(group);
+
+                                      _this.refreshUsersGroupMembers(group.id);
+
+                                      session.duration = _this.sessionDuration();
+
+                                      if (addFunc == 'addMember') {
+                                        return next();
+                                      }
+
+                                      async.mapSeries(GroupModel.SPECIALS, function(specialData, nextGroup) {
+                                        if (specialData.special == 'members') {
+                                          return nextGroup();
+                                        }
+
+                                        GroupModel
+                                          .findOne({
+                                            special: specialData.special
+                                          })
+                                          .exec(function(err, group) {
+                                            if (err || !group) {
+                                              return nextGroup();
+                                            }
+
+                                            group.addLeader(user, true, function() {
+                                              GroupModel.refreshGroup(group);
+
+                                              _this.refreshUsersGroupMembers(group.id);
+
+                                              nextGroup();
+                                            });
+                                          });
+
+                                      }, next);
+                                    });
+                                  }], function() {
+                                    _this
+                                      .findOne({
+                                        id: user.id
+                                      })
+                                      .exec(function(err, user) {
+                                        callback(null, user, session);
+                                      });
+                                  });
                                 });
-                              });
 
-                          });
+                            });
+                        });
+
                       });
-
-                    });
+                  });
                 });
-              });
+            });
           });
         },
 
@@ -1672,63 +1736,71 @@ module.exports = function() {
 
           email = email.toLowerCase();
 
-          GroupModel.unknownPermissions(function(permissions) {
-            if (permissions.permissions.indexOf('members-signin') < 0) {
-              return callback('forgotpermission');
+          _this.canSignin({
+            email: email
+          }, function(err) {
+            if (err) {
+              return callback(err);
             }
 
-            _this
-              .findOne({
-                email: email
-              })
-              .exec(function(err, user) {
-                if (err || !user) {
-                  return callback(err || 'noexists');
-                }
+            GroupModel.unknownPermissions(function(permissions) {
+              if (permissions.permissions.indexOf('members-signin') < 0) {
+                return callback('forgotpermission');
+              }
 
-                GroupModel.isDeactivated(user, function(isDeactivated) {
-                  if (isDeactivated) {
-                    return callback('deactivated');
+              _this
+                .findOne({
+                  email: email
+                })
+                .exec(function(err, user) {
+                  if (err || !user) {
+                    return callback(err || 'noexists');
                   }
 
-                  var code = Math.floor(Math.random() * 1000000).toString();
+                  GroupModel.isDeactivated(user, function(isDeactivated) {
+                    if (isDeactivated) {
+                      return callback('deactivated');
+                    }
 
-                  while (code.length < 6) {
-                    code = '0' + code;
-                  }
+                    var code = Math.floor(Math.random() * 1000000).toString();
 
-                  user.forgotCode = code;
-                  user.forgotCodeCreatedAt = new Date();
+                    while (code.length < 6) {
+                      code = '0' + code;
+                    }
 
-                  _this
-                    .update({
-                      id: user.id
-                    }, {
-                      forgotCode: user.forgotCode,
-                      forgotCodeCreatedAt: user.forgotCodeCreatedAt
-                    })
-                    .exec(function() {
-                      callback(null, email);
+                    user.forgotCode = code;
+                    user.forgotCodeCreatedAt = new Date();
 
-                      var $MailModel = DependencyInjection.injector.model.get('$MailModel');
+                    _this
+                      .update({
+                        id: user.id
+                      }, {
+                        forgotCode: user.forgotCode,
+                        forgotCodeCreatedAt: user.forgotCodeCreatedAt
+                      })
+                      .exec(function() {
+                        callback(null, email);
 
-                      new $MailModel()
-                        .to(user.email)
-                        .template('default')
-                        .subject('Your validation code')
-                        .data({
-                          context: process.env.WEB_BRAND + ' > SIGNIN',
-                          title: 'SECURITY',
-                          subtitle: 'You have lost your password.',
-                          content: [
-                            '<p>Hello we have received a request to reset your password for ', process.env.EXPRESS_URL, '.</p>',
-                            '<p>Please use the following code to validate this request: <strong>' + code + '</strong></p>'
-                          ].join('')
-                        })
-                        .send();
-                    });
+                        var $MailModel = DependencyInjection.injector.model.get('$MailModel');
+
+                        new $MailModel()
+                          .to(user.email)
+                          .template('default')
+                          .subject('Your validation code')
+                          .data({
+                            context: process.env.WEB_BRAND + ' > SIGNIN',
+                            title: 'SECURITY',
+                            subtitle: 'You have lost your password.',
+                            content: [
+                              '<p>Hello we have received a request to reset your password for ', process.env.EXPRESS_URL, '.</p>',
+                              '<p>Please use the following code to validate this request: <strong>' + code + '</strong></p>'
+                            ].join('')
+                          })
+                          .send();
+                      });
+                  });
                 });
-              });
+            });
           });
         },
 
@@ -1738,26 +1810,34 @@ module.exports = function() {
 
           email = email.toLowerCase();
 
-          GroupModel.unknownPermissions(function(permissions) {
-            if (permissions.permissions.indexOf('members-signin') < 0) {
-              return callback('forgotpermission');
+          _this.canSignin({
+            email: email
+          }, function(err) {
+            if (err) {
+              return callback(err);
             }
 
-            _this
-              .findOne({
-                email: email,
-                forgotCode: code,
-                forgotCodeCreatedAt: {
-                  '>=': _this.forgotCodeDuration()
-                }
-              })
-              .exec(function(err, user) {
-                if (err || !user) {
-                  return callback(err || 'noexists');
-                }
+            GroupModel.unknownPermissions(function(permissions) {
+              if (permissions.permissions.indexOf('members-signin') < 0) {
+                return callback('forgotpermission');
+              }
 
-                callback(null, email, code);
-              });
+              _this
+                .findOne({
+                  email: email,
+                  forgotCode: code,
+                  forgotCodeCreatedAt: {
+                    '>=': _this.forgotCodeDuration()
+                  }
+                })
+                .exec(function(err, user) {
+                  if (err || !user) {
+                    return callback(err || 'noexists');
+                  }
+
+                  callback(null, email, code);
+                });
+            });
           });
         },
 
@@ -1767,50 +1847,58 @@ module.exports = function() {
 
           email = email.toLowerCase();
 
-          GroupModel.unknownPermissions(function(permissions) {
-            if (permissions.permissions.indexOf('members-signin') < 0) {
-              return callback('forgotpermission');
+          _this.canSignin({
+            email: email
+          }, function(err) {
+            if (err) {
+              return callback(err);
             }
 
-            _this
-              .findOne({
-                email: email,
-                forgotCode: code,
-                forgotCodeCreatedAt: {
-                  '>=': _this.forgotCodeDuration()
-                }
-              })
-              .exec(function(err, user) {
-                if (err || !user) {
-                  return callback(err || 'noexists');
-                }
+            GroupModel.unknownPermissions(function(permissions) {
+              if (permissions.permissions.indexOf('members-signin') < 0) {
+                return callback('forgotpermission');
+              }
 
-                if (!_this.validatePassword(password, user)) {
-                  return callback('password');
-                }
-
-                _this.cryptPassword(password, function(err, hash) {
-                  if (err) {
-                    return callback(err);
+              _this
+                .findOne({
+                  email: email,
+                  forgotCode: code,
+                  forgotCodeCreatedAt: {
+                    '>=': _this.forgotCodeDuration()
+                  }
+                })
+                .exec(function(err, user) {
+                  if (err || !user) {
+                    return callback(err || 'noexists');
                   }
 
-                  user.forgotCode = null;
-                  user.forgotCodeCreatedAt = null;
-                  user.password = hash;
+                  if (!_this.validatePassword(password, user)) {
+                    return callback('password');
+                  }
 
-                  _this
-                    .update({
-                      id: user.id
-                    }, {
-                      forgotCode: user.forgotCode,
-                      forgotCodeCreatedAt: user.forgotCodeCreatedAt,
-                      password: user.password
-                    })
-                    .exec(function() {
-                      callback(null);
-                    });
+                  _this.cryptPassword(password, function(err, hash) {
+                    if (err) {
+                      return callback(err);
+                    }
+
+                    user.forgotCode = null;
+                    user.forgotCodeCreatedAt = null;
+                    user.password = hash;
+
+                    _this
+                      .update({
+                        id: user.id
+                      }, {
+                        forgotCode: user.forgotCode,
+                        forgotCodeCreatedAt: user.forgotCodeCreatedAt,
+                        password: user.password
+                      })
+                      .exec(function() {
+                        callback(null);
+                      });
+                  });
                 });
-              });
+            });
           });
         },
 
