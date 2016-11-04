@@ -1355,7 +1355,7 @@ module.exports = function() {
           } : null);
         },
 
-        signin: function(email, password, callback) {
+        signin: function(email, password, callback, force) {
           var _this = this,
               GroupModel = DependencyInjection.injector.model.get('GroupModel');
 
@@ -1371,7 +1371,7 @@ module.exports = function() {
                 email: email
               })
               .exec(function(err, user) {
-                if (err || !user || !user.password || !bcrypt.compareSync(password, user.password)) {
+                if (err || !user || (!force && (!user.password || !bcrypt.compareSync(password, user.password)))) {
                   return callback(err || 'credentials');
                 }
 
@@ -1470,7 +1470,7 @@ module.exports = function() {
           });
         },
 
-        createUser: function(args, callback) {
+        createUser: function(args, callback, force) {
           var _this = this,
               GroupModel = DependencyInjection.injector.model.get('GroupModel'),
               session = this.newSession();
@@ -1493,12 +1493,12 @@ module.exports = function() {
                   return callback('exists');
                 }
 
-                if (args.code) {
+                if (!force && args.code) {
                   if (!_signupCodes[args.email] || _signupCodes[args.email].code != args.code) {
                     return callback('bad code');
                   }
                 }
-                else {
+                else if (!force) {
                   var code = Math.floor(Math.random() * 1000000).toString();
 
                   while (code.length < 6) {
@@ -1533,7 +1533,7 @@ module.exports = function() {
                 delete _signupCodes[args.email];
 
                 _this.cryptPassword(args.password, function(err, passwordHash) {
-                  if (err) {
+                  if (!force && err) {
                     return callback(err);
                   }
 
@@ -1545,7 +1545,7 @@ module.exports = function() {
                       lastname: args.lastname,
                       username: args.username,
                       email: args.email,
-                      password: passwordHash,
+                      password: force ? null : passwordHash,
                       sessions: [session],
                       createdAt: new Date(),
                       updatedAt: new Date()
@@ -1882,6 +1882,32 @@ module.exports = function() {
           }
 
           $WebHomeService.metric('connectedMembers', _connectedMembers.total);
+        },
+
+        createAndSignin: function(req, res, session, user, callback) {
+          if (!user || !user.email) {
+            return callback('no email');
+          }
+
+          var _this = this;
+
+          this
+            .findOne({
+              email: user.email
+            })
+            .exec(function(err, userFound) {
+              if (userFound) {
+                return _this.signin(user.email, null, callback, true);
+              }
+
+              _this.createUser({
+                email: user.email,
+                firstname: user.firstname,
+                lastname: user.lastname
+              }, function() {
+                _this.signin(user.email, null, callback, true);
+              }, true);
+            });
         }
       };
 
