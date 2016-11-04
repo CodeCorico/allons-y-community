@@ -1884,7 +1884,7 @@ module.exports = function() {
           $WebHomeService.metric('connectedMembers', _connectedMembers.total);
         },
 
-        createAndSignin: function(req, res, session, user, callback) {
+        createAndSignin: function(req, res, user, callback) {
           if (!user || !user.email) {
             return callback('no email');
           }
