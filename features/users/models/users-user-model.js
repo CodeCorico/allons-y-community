@@ -16,6 +16,11 @@ module.exports = function() {
             title: 'Signin',
             description: 'Signin to the platform.',
             isPublic: true
+          },
+          'members-access': {
+            title: 'See the members profiles.',
+            description: 'Can see the members profiles.',
+            isPublic: true
           }
         },
         REALTIME_EVENTS = {
