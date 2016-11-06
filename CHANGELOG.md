@@ -1,3 +1,9 @@
+<a name="1.0.9"></a>
+# [1.0.9](https://github.com/CodeCorico/allons-y-community/compare/1.0.8...1.0.9) (2016-11-06)
+
+### Bug Fixes
+* **users user model:** use force in canSignup & canSignin methods [#e3c0909](https://github.com/CodeCorico/allons-y-community/commit/e3c0909)
+
 <a name="1.0.8"></a>
 # [1.0.8](https://github.com/CodeCorico/allons-y-community/compare/1.0.7...1.0.8) (2016-11-04)
 
