@@ -12,7 +12,7 @@
 >
   <h3>{{{group.name}}}</h3>
 
-  {{#if memberid && group.leadersIds && group.leadersIds.length && group.leadersIds[0] == memberid}}
+  {{#if memberid && group.leadersIds && group.leadersIds.length && group.leadersIds.indexOf(memberid) > -1}}
     <span class="groups-group-item-leader">{{_('as leader')}}</span>
   {{/if}}
 
