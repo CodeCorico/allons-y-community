@@ -1,3 +1,15 @@
+<a name="1.0.10"></a>
+# [1.0.10](https://github.com/CodeCorico/allons-y-community/compare/1.0.9...1.0.10) (2016-11-06)
+
+### Features
+* **users user model:** add the "members-access" permission [#df7cc79](https://github.com/CodeCorico/allons-y-community/commit/df7cc79)
+
+### Bug Fixes
+* **groups group model:** extend member group when adding it to the deactivated members [#62ee1a8](https://github.com/CodeCorico/allons-y-community/commit/62ee1a8)
+* **groups group model:** don't display empty member's groups [#350423b](https://github.com/CodeCorico/allons-y-community/commit/350423b)
+* **groups group item:** check the "as leader" with indexOf() [#b724460](https://github.com/CodeCorico/allons-y-community/commit/b724460)
+* **members route:** don't display a member if no "members-access" permission [#5ea62ea](https://github.com/CodeCorico/allons-y-community/commit/5ea62ea)
+
 <a name="1.0.9"></a>
 # [1.0.9](https://github.com/CodeCorico/allons-y-community/compare/1.0.8...1.0.9) (2016-11-06)
 
