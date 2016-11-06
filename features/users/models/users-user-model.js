@@ -230,6 +230,26 @@ module.exports = function() {
               value: 0
             });
           }
+
+          var $NowService = DependencyInjection.injector.controller.get('$NowService', true);
+
+          if ($NowService) {
+            $NowService.searchQuery(function() {
+              _this.nowSearchQuery.apply(_this, arguments);
+            });
+          }
+        },
+
+        nowSearchQuery: function(query, $socket, $message, callback) {
+          if (!$socket || !$socket.user || !$socket.user.hasPermission('members-access')) {
+            query.entityType = query.entityType || {
+              $nin: []
+            };
+
+            query.entityType.$nin.push('user');
+          }
+
+          callback();
         },
 
         logConverter: function(log) {
