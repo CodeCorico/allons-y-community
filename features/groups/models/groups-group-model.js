@@ -1611,13 +1611,7 @@ module.exports = function() {
               sockets.forEach(function(socket) {
                 var userGroups = groups
                   .map(function(group) {
-                    group = group.publicData(socket.user, null, ['leaders', 'members', 'invitations']);
-
-                    if (!group) {
-                      return null;
-                    }
-
-                    return group;
+                    return group.publicData(socket.user, null, ['leaders', 'members', 'invitations']);
                   })
                   .filter(function(group) {
                     return !!group;
@@ -1681,11 +1675,13 @@ module.exports = function() {
                   })
                 })
                 .exec(function(err, groups) {
-                  groups = groups.map(function(group) {
-                    group = group.publicData($socket.user, null, ['leaders', 'members', 'invitations']);
-
-                    return group;
-                  });
+                  groups = groups
+                    .map(function(group) {
+                      return group.publicData($socket.user, null, ['leaders', 'members', 'invitations']);
+                    })
+                    .filter(function(group) {
+                      return !!group;
+                    });
 
                   $RealTimeService.fire(eventName, {
                     groups: groups
