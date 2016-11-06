@@ -1367,7 +1367,7 @@ module.exports = function() {
           _this.canSignin({
             email: email,
             password: password
-          }, function(err) {
+          }, force, function(err) {
             if (err) {
               return callback(err);
             }
@@ -1486,8 +1486,12 @@ module.exports = function() {
           _canSignin.push(func);
         },
 
-        canSignin: function(args, callback) {
+        canSignin: function(args, force, callback) {
           var err = null;
+
+          if (force) {
+            return callback(null);
+          }
 
           async.eachSeries(_canSignin, function(func, nextSigninFunc) {
             if (err) {
@@ -1510,8 +1514,12 @@ module.exports = function() {
           _canSignup.push(func);
         },
 
-        canSignup: function(args, callback) {
+        canSignup: function(args, force, callback) {
           var err = null;
+
+          if (force) {
+            return callback(null);
+          }
 
           async.eachSeries(_canSignup, function(func, nextSignupFunc) {
             if (err) {
@@ -1537,7 +1545,7 @@ module.exports = function() {
 
           _this.cleanSignupCodes();
 
-          _this.canSignup(args, function(err) {
+          _this.canSignup(args, force, function(err) {
             if (err) {
               return callback(err);
             }
@@ -1739,7 +1747,7 @@ module.exports = function() {
 
           _this.canSignin({
             email: email
-          }, function(err) {
+          }, false, function(err) {
             if (err) {
               return callback(err);
             }
@@ -1813,7 +1821,7 @@ module.exports = function() {
 
           _this.canSignin({
             email: email
-          }, function(err) {
+          }, false, function(err) {
             if (err) {
               return callback(err);
             }
@@ -1850,7 +1858,7 @@ module.exports = function() {
 
           _this.canSignin({
             email: email
-          }, function(err) {
+          }, false, function(err) {
             if (err) {
               return callback(err);
             }
