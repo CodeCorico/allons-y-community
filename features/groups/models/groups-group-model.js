@@ -508,7 +508,7 @@ module.exports = function() {
 
             async.eachSeries(members, function(member, nextUser) {
 
-              async.eachSeries(member.groups, function(groupData, nextGroup) {
+              async.eachSeries(extend(true, [], member.groups), function(groupData, nextGroup) {
 
                 GroupModel
                   .findOne({
