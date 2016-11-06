@@ -12,8 +12,14 @@ module.exports = [{
   url: '/members/:member',
 
   enter: [
-    '$FaviconService', '$Page', '$i18nService', '$Layout', '$context',
-  function($FaviconService, $Page, $i18nService, $Layout, $context) {
+    '$BodyDataService', '$FaviconService', '$Page', '$i18nService', '$Layout', '$context', '$next',
+  function($BodyDataService, $FaviconService, $Page, $i18nService, $Layout, $context, $next) {
+    var user = $BodyDataService.data('user');
+
+    if (user.permissionsPublic.indexOf('members-access') < 0) {
+      return $next();
+    }
+
     document.title = $i18nService._('Members') + ' - ' + $Page.get('web').brand;
     $FaviconService.update('/public/members/favicon.png');
 
