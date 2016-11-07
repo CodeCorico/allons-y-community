@@ -121,6 +121,7 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
       var userHasOtherSockets = false,
           session = socket.request.signedCookies.session || null,
           log = 'users:socket-signout-unknown:' +  (session || ''),
+          useDurationMetric = false,
           duration = null;
 
       if (socket.user && socket.user.id) {
@@ -134,10 +135,12 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
           }
 
           userHasOtherSockets = true;
+
+          return false;
         });
       }
 
-      if (!userHasOtherSockets && socket.userConnectionDate) {
+      if (socket.userConnectionDate) {
         var minutes = (new Date().getTime() - socket.userConnectionDate.getTime()) / 1000 / 60;
 
         duration = '<30m';
@@ -148,11 +151,15 @@ module.exports = function($allonsy, UserModel, $io, $SocketsService) {
         duration = minutes >= 60 * 8 ? '>8h' : duration;
         duration = minutes >= 60 * 12 ? '>12h' : duration;
         duration = minutes >= 60 * 24 ? '>24h' : duration;
+
+        if (!userHasOtherSockets) {
+          useDurationMetric = true;
+        }
       }
 
       $allonsy.log('allons-y-community', log, {
         label: 'Close socket <span class="accent">[' + duration + ']</span>',
-        metric: duration ? {
+        metric: useDurationMetric ? {
           key: 'communityUsersSocketOut' + duration,
           name: 'Connections ' + duration,
           description: 'Connections ' + duration.replace('<', 'under ').replace('>', 'above ') + ' count.'
