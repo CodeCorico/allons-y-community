@@ -1802,7 +1802,9 @@ module.exports = function() {
             'members', 'permissionsLeaders', 'permissionsMembers', 'invitations'
           ]);
 
-          group.name = group.name.replace(regex, '<strong>$1</strong>');
+          if (group) {
+            group.name = group.name.replace(regex, '<strong>$1</strong>');
+          }
 
           return group;
         },
