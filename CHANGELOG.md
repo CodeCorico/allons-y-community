@@ -1,3 +1,11 @@
+<a name="1.0.11"></a>
+# [1.0.11](https://github.com/CodeCorico/allons-y-community/compare/1.0.10...1.0.11) (2016-11-07)
+
+### Bug Fixes
+* **groups group model:** disable the unused web create link [#e896f51](https://github.com/CodeCorico/allons-y-community/commit/e896f51)
+* **groups group model:** check if the group exists before changing its name [#13de241](https://github.com/CodeCorico/allons-y-community/commit/13de241)
+* **users socketio:** always insert the socket duration on the closing log [#72a7400](https://github.com/CodeCorico/allons-y-community/commit/72a7400)
+
 <a name="1.0.10"></a>
 # [1.0.10](https://github.com/CodeCorico/allons-y-community/compare/1.0.9...1.0.10) (2016-11-06)
 
