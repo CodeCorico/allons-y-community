@@ -227,6 +227,7 @@ module.exports = function() {
             $WebHomeService.metric({
               name: 'connectedMembers',
               title: 'members signed in',
+              permissions: ['members-access'],
               value: 0
             });
           }
