@@ -1,3 +1,9 @@
+<a name="1.0.12"></a>
+# [1.0.12](https://github.com/CodeCorico/allons-y-community/compare/1.0.11...1.0.12) (2016-11-08)
+
+### Features
+* **users user model:** display the connected members metric only for members-access permission [#99782fd](https://github.com/CodeCorico/allons-y-community/commit/99782fd)
+
 <a name="1.0.11"></a>
 # [1.0.11](https://github.com/CodeCorico/allons-y-community/compare/1.0.10...1.0.11) (2016-11-07)
 
