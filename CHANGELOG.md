@@ -1,3 +1,9 @@
+<a name="1.0.13"></a>
+# [1.0.13](https://github.com/CodeCorico/allons-y-community/compare/1.0.12...1.0.13) (2016-11-21)
+
+### Features
+* **groups:** create the members, leaders, invitations and deactivated pages [#a4a0cc1](https://github.com/CodeCorico/allons-y-community/commit/a4a0cc1)
+
 <a name="1.0.12"></a>
 # [1.0.12](https://github.com/CodeCorico/allons-y-community/compare/1.0.11...1.0.12) (2016-11-08)
 
