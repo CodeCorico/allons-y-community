@@ -18,9 +18,10 @@ module.exports = function() {
         });
       };
 
-      this.openGroup = function(url) {
+      this.openGroup = function(url, page) {
         _this.fire('openGroup', {
-          url: url
+          url: url,
+          page: page || null
         });
       };
 
@@ -29,12 +30,12 @@ module.exports = function() {
           return callback([]);
         }
 
-        $socket.once('read(groups/users.seach)', function(args) {
+        $socket.once('read(groups/users.search)', function(args) {
           _usersFound = args.users;
           callback(args.users);
         });
 
-        $socket.emit('call(groups/users.seach)', {
+        $socket.emit('call(groups/users.search)', {
           groupId: groupId,
           search: search,
           isLeader: isLeader,

@@ -13,6 +13,12 @@
         _realtimeComponent = 'membersMemberItemController' + MembersMemberItem.get('componentId'),
         _lastId = null;
 
+    function _formatMember(member) {
+      member.addedAtString = window.moment(member.addedAt).fromNow();
+
+      return member;
+    }
+
     MembersMemberItem.observe('member', function(member) {
       if (!member || !member.id) {
         _lastId = null;
@@ -20,6 +26,8 @@
 
         return;
       }
+
+      _formatMember(member);
 
       if (_lastId == member.id) {
         return;
@@ -33,7 +41,10 @@
             return;
           }
 
-          MembersMemberItem.set('member', $.extend(true, MembersMemberItem.get('user') || {}, args.user));
+          var member = $.extend(true, MembersMemberItem.get('user') || {}, args.user);
+          _formatMember(member);
+
+          MembersMemberItem.set('member', member);
         },
         url: function(url) {
           MembersMemberItem.set('selected', '/members/' + MembersMemberItem.get('member.url') == url);
@@ -55,6 +66,26 @@
           MembersMemberItem.set('show', true);
         }, MembersMemberItem.get('index') * 150);
       }
+    });
+
+    MembersMemberItem.on('becomemember', function(event) {
+      event.original.stopPropagation();
+      event.original.preventDefault();
+    });
+
+    MembersMemberItem.on('remove', function(event) {
+      event.original.stopPropagation();
+      event.original.preventDefault();
+    });
+
+    MembersMemberItem.on('reactivate', function(event) {
+      event.original.stopPropagation();
+      event.original.preventDefault();
+    });
+
+    MembersMemberItem.on('cancelinvitation', function(event) {
+      event.original.stopPropagation();
+      event.original.preventDefault();
     });
 
     MembersMemberItem.on('teardown', function() {

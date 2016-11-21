@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = [{
-  event: 'call(groups/users.seach)',
+  event: 'call(groups/users.search)',
   isMember: true,
   controller: function($socket, GroupModel, UserModel, $message) {
     if (!this.validMessage($message, {
@@ -46,7 +46,7 @@ module.exports = [{
             return;
           }
 
-          $socket.emit('read(groups/users.seach)', {
+          $socket.emit('read(groups/users.search)', {
             users: users.map(function(user) {
               return {
                 email: user.email,

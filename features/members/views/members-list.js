@@ -20,7 +20,8 @@
         MembersList.get('type'),
         (MembersList.get('memberid') ? ':' + MembersList.get('memberid') : ''),
         (MembersList.get('groupid') ? ':' + MembersList.get('groupid') : ''),
-        (MembersList.get('count') ? ':' + MembersList.get('count') : '')
+        (MembersList.get('count') ? ':' + MembersList.get('count') : ''),
+        (MembersList.get('filter') ? ':' + MembersList.get('filter') : '')
       ].join('');
 
       $RealTimeService.realtimeComponent(_realtimeComponent, {
@@ -37,6 +38,10 @@
     }
 
     MembersList.observe('count', _updateRealtimeEvents, {
+      init: false
+    });
+
+    MembersList.observe('filter', _updateRealtimeEvents, {
       init: false
     });
 

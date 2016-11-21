@@ -5,6 +5,8 @@
     {{(notransition && notransition == 'true') || show ? 'show' : ''}}
     {{selected ? 'selected' : ''}}
     {{cls ? cls : ''}}
+    {{(index + 1) % 2 === 0 ? 'index-2' : ''}}
+    {{(index + 1) % 3 === 0 ? 'index-3' : ''}}
   "
   href="/members/{{member.url}}"
   title="{{member.username}}"
@@ -15,6 +17,26 @@
     style="background-image: url('{{displayAvatar(member.avatarThumbSquare)}}');"
   ></span>
   <h3>{{{member.username}}}</h3>
+
+  {{#if template == 'card'}}
+    <p class="tiny">{{_('added')}} {{member.addedAtString}}.</p>
+    {{#if cancancelinvitation}}
+      <p><strong>{{_('to become')}} {{{member.isLeader ? '<span class="warning-bg">leader</span>' : 'member'}}}</strong></p>
+    {{/if}}
+
+    <!-- {{#if canbecomemember}}
+      <button class="members-member-button error-bg" on-click="becomemember">{{_('Become a member')}}</button>
+    {{/if}}
+    {{#if canremove}}
+      <button class="members-member-button warning-bg" on-click="remove">{{_('Remove from the group')}}</button>
+    {{/if}}
+    {{#if canreactivate}}
+      <button class="members-member-button success-bg" on-click="reactivate">{{_('Reactivate')}}</button>
+    {{/if}}
+    {{#if cancancelinvitation}}
+      <button class="members-member-button warning-bg" on-click="cancelinvitation">{{_('Cancel invitation')}}</button>
+    {{/if}} -->
+  {{/if}}
 
   {{> members-member-item-extend}}
 </a>

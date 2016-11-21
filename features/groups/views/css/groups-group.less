@@ -8,6 +8,11 @@
   bottom: 0;
   overflow: hidden;
 
+  input {
+    border-radius: 0;
+    -webkit-appearance: none;
+  }
+
   .header-bg {
     position: absolute;
     top: 6rem;
@@ -28,6 +33,17 @@
       bottom: -1px;
       background: #333;
       opacity: 0.65;
+    }
+  }
+
+  h1 {
+    a, a:hover, a:visited {
+      color: white;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
     }
   }
 
@@ -55,6 +71,15 @@
       color: white;
       border: none;
       margin: 0 0 0.5rem;
+
+      a, a:hover, a:visited {
+        color: white;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
     }
 
     .groups-group-members {
@@ -79,7 +104,16 @@
       text-transform: uppercase;
       font-weight: 400;
       font-size: 2rem;
-      margin: 0;
+      margin: 0 0 1.5rem;
+
+      span {
+        opacity: 0.65;
+        font-weight: 300;
+      }
+    }
+
+    .groups-group-filter {
+      width: 100%;
     }
   }
 

@@ -11,7 +11,6 @@
   }
 
   .members-list-more {
-    cursor: default;
     float: left;
     width: auto;
     padding: 0 0.5rem;
@@ -19,5 +18,22 @@
     color: white;
     text-align: center;
     line-height: 15rem;
+    text-decoration: none;
+
+    &:hover, &:visited {
+      text-decoration: none;
+    }
+  }
+
+  .members-show-more {
+    clear: both;
+    padding: 1rem 0;
+    text-align: center;
+
+    button {
+      background: @accentColor;
+      color: white;
+      border: none;
+    }
   }
 }

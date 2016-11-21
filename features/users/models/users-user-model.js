@@ -871,6 +871,10 @@ module.exports = function() {
             });
         },
 
+        searchByNameRegex: function(search) {
+          return new RegExp('.*?' + search.replace(/ /g, '.*?') + '.*?', 'i');
+        },
+
         searchByName: function(search, moreConditions, limit, callback) {
           if (!search || typeof search != 'string') {
             return callback(null, []);
@@ -881,7 +885,7 @@ module.exports = function() {
           var conditions = {
             $match: {
               entityType: this.entityType,
-              username: new RegExp('.*?' + search.replace(/ /g, '.*?') + '.*?', 'i')
+              username: this.searchByNameRegex(search)
             }
           };
 
@@ -940,6 +944,14 @@ module.exports = function() {
             });
         },
 
+        filterByName: function(filter, members) {
+          filter = this.searchByNameRegex(filter);
+
+          return members.filter(function(member) {
+            return !!member.username.match(filter);
+          });
+        },
+
         callUsersGroupType: function(eventOrigin, permissionToCheck, filterMembers, $socket, eventName, args, callback) {
           if (!args || args.length < 1) {
             if (callback) {
@@ -949,7 +961,8 @@ module.exports = function() {
             return;
           }
 
-          var GroupModel = DependencyInjection.injector.model.get('GroupModel'),
+          var _this = this,
+              GroupModel = DependencyInjection.injector.model.get('GroupModel'),
               eventNamesCount = $RealTimeService.eventNamesFromCount(eventOrigin, 1, $socket, [args[0]]);
 
           if (eventNamesCount === false) {
@@ -980,7 +993,7 @@ module.exports = function() {
                   return new Date(b.addedAt) - new Date(a.addedAt);
                 });
 
-              if ($socket) {
+              if ($socket && $socket.user) {
                 if (
                   (!$socket.user.isMembersLeader || permissionToCheck != 'groups-see-leaders') &&
                   !$socket.user.hasPermission(permissionToCheck + ':' + group.id)
@@ -996,6 +1009,10 @@ module.exports = function() {
                   return;
                 }
 
+                if (args.length > 2 && args[2]) {
+                  members = _this.filterByName(args[2], members);
+                }
+
                 $RealTimeService.fire(eventName, {
                   total: members.length,
                   users: args[1] != 'all' && args[1] < members.length ? members.slice(0, args[1]) : members
@@ -1003,7 +1020,12 @@ module.exports = function() {
               }
               else {
                 Object.keys(eventNamesCount.eventNames).forEach(function(eventName) {
-                  var event = eventNamesCount.eventNames[eventName];
+                  var event = eventNamesCount.eventNames[eventName],
+                      membersResult = extend(true, [], members);
+
+                  if (event.args.length > 2 && event.args[2]) {
+                    membersResult = _this.filterByName(event.args[2], membersResult);
+                  }
 
                   event.sockets.forEach(function(socket) {
                     if (!socket.user || !socket.user.id ||
@@ -1016,10 +1038,10 @@ module.exports = function() {
                     }
 
                     $RealTimeService.fire(eventName, {
-                      total: members.length,
+                      total: membersResult.length,
                       users: !eventNamesCount.eventNames[eventName].count ?
-                        members :
-                        members.slice(0, eventNamesCount.eventNames[eventName].count)
+                        membersResult :
+                        membersResult.slice(0, eventNamesCount.eventNames[eventName].count)
                     }, socket);
                   });
                 });

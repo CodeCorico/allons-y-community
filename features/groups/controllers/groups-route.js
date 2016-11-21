@@ -3,7 +3,8 @@
 module.exports = [{
   urls: [
     '/groups',
-    '/groups/:group'
+    '/groups/:group',
+    '/groups/:group/:page'
   ],
 
   enter: [
@@ -14,7 +15,12 @@ module.exports = [{
 
     $Layout.selectApp('Groups', false);
 
-    var GroupsService = null;
+    var GroupsService = null,
+        pages = ['leaders', 'members', 'deactivated', 'invitations'];
+
+    if ($context.params.page && pages.indexOf($context.params.page) < 0) {
+      return window.page.redirect('/groups/' + $context.params.group);
+    }
 
     setTimeout(function() {
       require('/public/groups/groups-service.js')
@@ -34,7 +40,7 @@ module.exports = [{
         })
         .then(function() {
           if ($context.params.group) {
-            GroupsService.openGroup($context.params.group);
+            GroupsService.openGroup($context.params.group, $context.params.page);
           }
         });
     });

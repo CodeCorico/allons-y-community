@@ -1863,8 +1863,8 @@ module.exports = function() {
               isMember = user.hasPermission('groups-member:' + group.id),
               isLeader = user.hasPermission('groups-leader:' + group.id);
 
-          group.activeUserisLeader = isMember;
-          group.activeUserisMember = isLeader;
+          group.activeUserisMember = isMember;
+          group.activeUserisLeader = isLeader;
           group.activeUserCanJoinAsLeader = !isLeader && user.hasPermission('groups-join-leader:' + group.id);
           group.activeUserCanJoinAsMember = !isMember && user.hasPermission('groups-join-member:' + group.id);
           group.activeUserCanInvitLeaders = isLeader,

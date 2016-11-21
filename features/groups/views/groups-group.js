@@ -45,6 +45,7 @@
           layout: $(GroupsGroup.el),
           scrolls: $(GroupsGroup.el).find('.pl-scrolls')
         },
+        _pageFilterTimeout = null,
         _scrolls = null;
 
     function _membersList(members) {
@@ -89,6 +90,19 @@
         return;
       }
 
+      var url = args.url;
+
+      if (url.substr(url.length - 1, 1) == '/') {
+        url = url.substr(0, url.length - 1);
+      }
+
+      url = '/groups/' + url;
+
+      GroupsGroup.set('url', url);
+      GroupsGroup.set('pageFilter', '');
+      GroupsGroup.set('pageItemsCount', 25);
+      GroupsGroup.set('page', args.page || null);
+
       $RealTimeService.realtimeComponent('groupsGroupController', {
         name: 'groups-group:' + args.url,
         update: function(event, args) {
@@ -96,17 +110,37 @@
             return;
           }
 
+          var page = GroupsGroup.get('page');
+
           if (args.error && args.error == 'not found') {
             return window.page.redirect('/404');
           }
 
           if (args.group) {
+            if (page == 'deactivated' && (!args.group.special || args.group.special != 'deactivated')) {
+              return window.page.redirect('/404');
+            }
+            if (args.group.special == 'deactivated' && (page == 'members' || page == 'invitations')) {
+              return window.page.redirect('/404');
+            }
+
             document.title = args.group.name + ' - ' + _web.brand;
+
+            GroupsGroup.set('leadersUrl', url + '/leaders');
+            GroupsGroup.set('membersUrl', url + '/' + (args.group.special == 'deactivated' ? 'deactivated' : 'members'));
+            GroupsGroup.set('invitationsUrl', url + '/invitations');
+
+            GroupsGroup.set('canBecomeMember', args.group.activeUserisLeader);
+            GroupsGroup.set('canRemoveMember', args.group.activeUserisLeader && (!args.group.special || args.group.special != 'deactivated'));
+            GroupsGroup.set('canReactivateDeactivated', args.group.activeUserisLeader && args.group.special == 'deactivated');
+            GroupsGroup.set('canCancelInvitation', args.group.activeUserisLeader);
           }
 
           _changeGroup(args);
         }
       }, 'groups-group:' + args.url);
+
+      GroupsGroup.require();
     });
 
     function _beforeTeadown(callback) {
@@ -123,6 +157,41 @@
           callback();
         });
       });
+    });
+
+    GroupsGroup.on('showMore', function() {
+      GroupsGroup.set('pageItemsCount', GroupsGroup.get('pageItemsCount') + 25);
+    });
+
+    function _updatePageFilter() {
+      if (!GroupsGroup) {
+        return;
+      }
+
+      GroupsGroup.set('pageFilterValue', GroupsGroup.get('pageFilter'));
+    }
+
+    GroupsGroup.observe('pageFilter', function() {
+      clearTimeout(_pageFilterTimeout);
+      _pageFilterTimeout = setTimeout(_updatePageFilter, 500);
+    }, {
+      init: false
+    });
+
+    GroupsGroup.on('becomemember', function() {
+      console.log('becomemember');
+    });
+
+    GroupsGroup.on('remove', function() {
+      console.log('remove');
+    });
+
+    GroupsGroup.on('reactivate', function() {
+      console.log('reactivate');
+    });
+
+    GroupsGroup.on('cancelinvitation', function() {
+      console.log('cancelinvitation');
     });
 
     GroupsGroup.on('teardown', function() {

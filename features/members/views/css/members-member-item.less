@@ -24,6 +24,43 @@
     }
   }
 
+  &.members-member-item-card {
+    box-sizing: border-box;
+    width: 32.5%;
+    margin: 0 1% 1% 0;
+    height: 15rem;
+    padding: 1rem 1rem 0 16rem;
+    text-decoration: none;
+    background: @accentColor;
+
+    &::before, &::after {
+      display: none;
+    }
+
+    &.index-3 {
+      margin-right: 0;
+    }
+
+    &:hover, &:visited {
+      text-decoration: none;
+    }
+
+    .members-member-item-avatar {
+      width: 15rem;
+    }
+
+    h3 {
+      position: relative;
+      background: none;
+      color: white;
+      border: none;
+      padding: 0;
+      font-size: 2rem;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+  }
+
   &.members-member-item-complete {
     float: none;
     width: auto;
@@ -82,5 +119,25 @@
     strong {
       font-weight: 500;
     }
+  }
+
+  p {
+    text-decoration: none;
+    color: white;
+    margin-bottom: 1rem;
+
+    &.tiny {
+      font-size: 1.2rem;
+    }
+  }
+
+  .members-member-button {
+    height: 3rem;
+    border: none;
+    background: @successColor;
+    color: white;
+    padding: 0 1rem;
+    line-height: 1;
+    margin-bottom: 0.5rem;
   }
 }

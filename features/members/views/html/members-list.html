@@ -13,12 +13,26 @@
       data-bindparent-member="members.{{@index}}"
       data-bindparent-notransition="notransition"
       data-bindparent-template="template"
+      data-bindparent-canbecomemember="canbecomemember"
+      data-bindparent-canremove="canremove"
+      data-bindparent-canreactivate="canreactivate"
+      data-bindparent-cancancelinvitation="cancancelinvitation"
       data-index="{{@index}}"
       data-on-click="click"
+      data-on-becomemember="becomemember"
+      data-on-remove="remove"
+      data-on-reactivate="reactivate"
+      data-on-cancelinvitation="cancelinvitation"
     ></rv-require>
   {{/members}}
 
-  {{#if members && members.length < total && (!nomore || nomore != 'true')}}
-    <div class="members-list-more">+{{total - members.length}}</div>
+  {{#if members && total > members.length  && (!nomore || nomore != 'true')}}
+    <a class="members-list-more" href="{{moreurl}}">+{{total - members.length}}</a>
+  {{/if}}
+
+  {{#if showmore && showmore == 'true' && total > members.length}}
+    <div class="members-show-more">
+      <button on-click="clickshowmore">{{_('Show more')}}</button>
+    </div>
   {{/if}}
 </section>
