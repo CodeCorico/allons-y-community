@@ -68,24 +68,40 @@
       }
     });
 
-    MembersMemberItem.on('becomemember', function(event) {
+    MembersMemberItem.on('becomememberClick', function(event) {
       event.original.stopPropagation();
       event.original.preventDefault();
+
+      MembersMemberItem.fire('becomemember', {
+        member: MembersMemberItem.get('member')
+      });
     });
 
-    MembersMemberItem.on('remove', function(event) {
+    MembersMemberItem.on('removeClick', function(event) {
       event.original.stopPropagation();
       event.original.preventDefault();
+
+      MembersMemberItem.fire('remove', {
+        member: MembersMemberItem.get('member')
+      });
     });
 
-    MembersMemberItem.on('reactivate', function(event) {
+    MembersMemberItem.on('reactivateClick', function(event) {
       event.original.stopPropagation();
       event.original.preventDefault();
+
+      MembersMemberItem.fire('reactivate', {
+        member: MembersMemberItem.get('member')
+      });
     });
 
-    MembersMemberItem.on('cancelinvitation', function(event) {
+    MembersMemberItem.on('cancelinvitationClick', function(event) {
       event.original.stopPropagation();
       event.original.preventDefault();
+
+      MembersMemberItem.fire('cancelinvitation', {
+        invitation: MembersMemberItem.get('member')
+      });
     });
 
     MembersMemberItem.on('teardown', function() {

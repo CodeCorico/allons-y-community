@@ -14,7 +14,7 @@ module.exports = [{
 }, {
   event: 'create(groups/group.invitation)',
   isMember: true,
-  controller: function($allonsy, $socket, GroupModel, UserModel, $SocketsService, $message) {
+  controller: function($allonsy, $socket, GroupModel, UserModel, $message) {
     if (!this.validMessage($message, {
       groupId: 'filled'
     })) {
@@ -75,7 +75,7 @@ module.exports = [{
 }, {
   event: 'update(groups/group.invitation)',
   isMember: true,
-  controller: function($allonsy, $socket, $SocketsService, GroupModel, UserModel, $message) {
+  controller: function($allonsy, $socket, GroupModel, UserModel, $message) {
     if (!this.validMessage($message, {
       notificationId: 'filled',
       groupId: 'filled',
@@ -268,6 +268,47 @@ module.exports = [{
             });
           });
         });
+      });
+  }
+}, {
+  event: 'update(groups/group.downmember)',
+  isMember: true,
+  controller: function($socket, $message, GroupModel, UserModel) {
+    if (!this.validMessage($message, {
+      url: ['string', 'filled'],
+      memberId: ['string', 'filled']
+    })) {
+      return;
+    }
+
+    GroupModel
+      .findOne({
+        url: $message.url
+      })
+      .exec(function(err, group) {
+        if (err || !group) {
+          return;
+        }
+
+        if (!$socket.user.isMembersLeader && !$socket.user.hasPermission('groups-leader:' + group.id)) {
+          return;
+        }
+
+        UserModel
+          .findOne({
+            id: $message.memberId
+          })
+          .exec(function(err, member) {
+            if (err || !member) {
+              return;
+            }
+
+            group.leaderToMember(member, true, function() {
+              UserModel.refreshUsersGroupLeaders(group.id);
+              UserModel.refreshUsersGroupMembers(group.id);
+            });
+          });
+
       });
   }
 }];

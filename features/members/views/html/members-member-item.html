@@ -24,18 +24,18 @@
       <p><strong>{{_('to become')}} {{{member.isLeader ? '<span class="warning-bg">leader</span>' : 'member'}}}</strong></p>
     {{/if}}
 
-    <!-- {{#if canbecomemember}}
-      <button class="members-member-button error-bg" on-click="becomemember">{{_('Become a member')}}</button>
+    {{#if canbecomemember}}
+      <button class="members-member-button error-bg" on-click="becomememberClick">{{_('Become a member')}}</button>
     {{/if}}
     {{#if canremove}}
-      <button class="members-member-button warning-bg" on-click="remove">{{_('Remove from the group')}}</button>
+      <button class="members-member-button warning-bg" on-click="removeClick">{{_('Remove from the group')}}</button>
     {{/if}}
     {{#if canreactivate}}
-      <button class="members-member-button success-bg" on-click="reactivate">{{_('Reactivate')}}</button>
+      <button class="members-member-button success-bg" on-click="reactivateClick">{{_('Reactivate')}}</button>
     {{/if}}
     {{#if cancancelinvitation}}
-      <button class="members-member-button warning-bg" on-click="cancelinvitation">{{_('Cancel invitation')}}</button>
-    {{/if}} -->
+      <button class="members-member-button warning-bg" on-click="cancelinvitationClick">{{_('Cancel invitation')}}</button>
+    {{/if}}
   {{/if}}
 
   {{> members-member-item-extend}}

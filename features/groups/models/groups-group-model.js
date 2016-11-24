@@ -500,6 +500,66 @@ module.exports = function() {
             return this.addLeaders([leader], flush, callback);
           },
 
+          leaderToMember: function(leader, flush, callback) {
+            var _this = this,
+                GroupModel = DependencyInjection.injector.model.get('GroupModel'),
+                UserModel = DependencyInjection.injector.model.get('UserModel'),
+                down = false;
+
+            for (var i = 0; i < this.members.length; i++) {
+              if (this.members[i].id == leader.id) {
+
+                if (this.members[i].isLeader) {
+                  this.members[i].isLeader = false;
+
+                  down = true;
+                }
+
+                break;
+              }
+            }
+
+            if (!down) {
+              return callback(null, this);
+            }
+
+            GroupModel
+              .update({
+                id: this.id
+              }, {
+                members: this.members
+              })
+              .exec(function(err) {
+                if (err) {
+                  return callback(err);
+                }
+
+                leader.groups = leader.groups || [];
+
+                for (var i = 0; i < leader.groups.length; i++) {
+                  if (leader.groups[i].id == _this.id) {
+                    leader.groups[i].isLeader = false;
+
+                    break;
+                  }
+                }
+
+                UserModel
+                  .update({
+                    id: leader.id
+                  }, {
+                    groups: leader.groups
+                  })
+                  .exec(function() {
+                    if (!flush) {
+                      return callback(null, _this);
+                    }
+
+                    _this.flushPermissions([leader], callback);
+                  });
+              });
+          },
+
           addDeactivatedMembers: function(leader, members, flush, callback) {
             var _this = this,
                 GroupModel = DependencyInjection.injector.model.get('GroupModel'),

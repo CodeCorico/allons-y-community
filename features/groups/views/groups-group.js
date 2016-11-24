@@ -96,8 +96,10 @@
         url = url.substr(0, url.length - 1);
       }
 
-      url = '/groups/' + url;
 
+      GroupsGroup.set('groupUrl', url);
+
+      url = '/groups/' + url;
       GroupsGroup.set('url', url);
       GroupsGroup.set('pageFilter', '');
       GroupsGroup.set('pageItemsCount', 25);
@@ -178,8 +180,8 @@
       init: false
     });
 
-    GroupsGroup.on('becomemember', function() {
-      console.log('becomemember');
+    GroupsGroup.on('becomemember', function(element, list, args) {
+      GroupsService.becomeMember(GroupsGroup.get('groupUrl'), args.member);
     });
 
     GroupsGroup.on('remove', function() {

@@ -70,6 +70,13 @@ module.exports = function() {
         });
       };
 
+      this.becomeMember = function(url, member) {
+        $socket.emit('update(groups/group.downmember)', {
+          url: url,
+          memberId: member.id
+        });
+      };
+
     })();
 
   }]);
