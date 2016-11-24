@@ -2104,6 +2104,59 @@ module.exports = function() {
 
             UserModel.addHomeTile(tile, $socket.user.id);
           }]);
+        },
+
+        removeDeactivatedMember: function(member, flush, callback) {
+          var _this = this;
+
+          this
+            .findOne({
+              special: 'deactivated'
+            })
+            .exec(function(err, deactivatedGroup) {
+              if (err || !deactivatedGroup) {
+                return callback(err || 'no deactivated group');
+              }
+
+              var found = false;
+
+              for (var i = 0; i < deactivatedGroup.members.length; i++) {
+                if (deactivatedGroup.members[i].id == member.id) {
+                  found = true;
+                  deactivatedGroup.members.splice(i, 1);
+
+                  break;
+                }
+              }
+
+              if (!found) {
+                return callback('no deactivated');
+              }
+
+              _this
+                .update({
+                  id: deactivatedGroup.id
+                }, {
+                  members: deactivatedGroup.members
+                })
+                .exec(function() {
+
+                  _this
+                    .findOne({
+                      special: 'members'
+                    })
+                    .exec(function(err, membersGroup) {
+                      if (err || !membersGroup) {
+                        return callback(err || 'no members group');
+                      }
+
+                      membersGroup.addMember(member, flush, function() {
+                        callback(null, deactivatedGroup, membersGroup);
+                      });
+                    });
+
+                });
+            });
         }
       };
 

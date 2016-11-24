@@ -84,6 +84,12 @@ module.exports = function() {
         });
       };
 
+      this.reactivate = function(member) {
+        $socket.emit('update(groups/group.deactivated)', {
+          memberId: member.id
+        });
+      };
+
       this.cancelinvitation = function(url, invitation) {
         $socket.emit('delete(groups/group.invitation)', {
           url: url,

@@ -438,4 +438,58 @@ module.exports = [{
 
       });
   }
+}, {
+  event: 'update(groups/group.deactivated)',
+  isMember: true,
+  controller: function($socket, $message, GroupModel, UserModel) {
+    if (!this.validMessage($message, {
+      memberId: ['string', 'filled']
+    })) {
+      return;
+    }
+
+    GroupModel
+      .findOne({
+        special: 'deactivated'
+      })
+      .exec(function(err, group) {
+        if (err || !group) {
+          return;
+        }
+
+        if (!$socket.user.isMembersLeader && !$socket.user.hasPermission('groups-leader:' + group.id)) {
+          return;
+        }
+
+        UserModel
+          .findOne({
+            id: $message.memberId
+          })
+          .exec(function(err, member) {
+            if (err || !member) {
+              return;
+            }
+
+            member.groups = [];
+
+            UserModel
+              .update({
+                id: member.id
+              }, {
+                goups: member.groups
+              })
+              .exec(function() {
+                GroupModel.removeDeactivatedMember(member, true, function(err, deactivatedGroup, membersGroup) {
+                  if (err || !deactivatedGroup || !membersGroup) {
+                    return;
+                  }
+
+                  UserModel.refreshUsersGroupMembers(deactivatedGroup.id);
+                  UserModel.refreshUsersGroupMembers(membersGroup.id);
+                });
+              });
+          });
+
+      });
+  }
 }];

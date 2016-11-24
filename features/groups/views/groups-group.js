@@ -188,8 +188,8 @@
       GroupsService.removeMember(GroupsGroup.get('groupUrl'), args.member);
     });
 
-    GroupsGroup.on('reactivate', function() {
-      console.log('reactivate');
+    GroupsGroup.on('reactivate', function(element, list, args) {
+      GroupsService.reactivate(args.member);
     });
 
     GroupsGroup.on('cancelinvitation', function(element, list, args) {
