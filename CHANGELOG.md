@@ -1,3 +1,13 @@
+<a name="1.0.14"></a>
+# [1.0.14](https://github.com/CodeCorico/allons-y-community/compare/1.0.13...1.0.14) (2016-11-24)
+
+### Features
+* **groups:** add the possibility to downgrade a leader to a member [#fb9c0c8](https://github.com/CodeCorico/allons-y-community/commit/fb9c0c8)
+* **groups:** add the possibility to remove a member [#8297ec4](https://github.com/CodeCorico/allons-y-community/commit/8297ec4)
+* **groups:** add the possibility to cancel an invitation [#c44570e](https://github.com/CodeCorico/allons-y-community/commit/c44570e)
+* **groups:** add the possibility to reactivate a deactivated member [#495e89c](https://github.com/CodeCorico/allons-y-community/commit/495e89c)
+* **groups:** block the possibility to remove the last leader [#22c02b3](https://github.com/CodeCorico/allons-y-community/commit/22c02b3)
+
 <a name="1.0.13"></a>
 # [1.0.13](https://github.com/CodeCorico/allons-y-community/compare/1.0.12...1.0.13) (2016-11-21)
 
