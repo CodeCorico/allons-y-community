@@ -30,6 +30,10 @@ module.exports = [{
           return;
         }
 
+        if (!$message.isLeader && (group.special == 'unknowns' || group.special == 'members' || group.special == 'deactivated')) {
+          return;
+        }
+
         if ($message.add) {
           UserModel
             .findOne({
@@ -376,8 +380,32 @@ module.exports = [{
           return;
         }
 
+        if (group.special == 'members' || group.special == 'unknown' || group.special == 'deactivated') {
+          return;
+        }
+
         if (!$socket.user.isMembersLeader && !$socket.user.hasPermission('groups-leader:' + group.id)) {
           return;
+        }
+
+        var leaders = group.members.filter(function(member) {
+          return member.isLeader;
+        });
+
+        if (leaders.length < 2) {
+          for (var i = 0; i < group.members.length; i++) {
+            if (group.members[i].id == $message.memberId) {
+              if (group.members[i].isLeader) {
+                $socket.emit('read(groups/group.member)', {
+                  error: 'last-leader'
+                });
+
+                return;
+              }
+
+              break;
+            }
+          }
         }
 
         UserModel
@@ -417,7 +445,23 @@ module.exports = [{
           return;
         }
 
+        if (group.special == 'unknown' || group.special == 'deactivated') {
+          return;
+        }
+
         if (!$socket.user.isMembersLeader && !$socket.user.hasPermission('groups-leader:' + group.id)) {
+          return;
+        }
+
+        var leaders = group.members.filter(function(member) {
+          return member.isLeader;
+        });
+
+        if (leaders.length < 2) {
+          $socket.emit('read(groups/group.downmember)', {
+            error: 'last-leader'
+          });
+
           return;
         }
 

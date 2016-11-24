@@ -27,6 +27,10 @@
         return;
       }
 
+      MembersMemberItem.set('deleted', false);
+      MembersMemberItem.set('lastLeaderError', false);
+      MembersMemberItem.set('inError', false);
+
       _formatMember(member);
 
       if (_lastId == member.id) {
@@ -72,6 +76,8 @@
       event.original.stopPropagation();
       event.original.preventDefault();
 
+      MembersMemberItem.set('deleted', true);
+
       MembersMemberItem.fire('becomemember', {
         member: MembersMemberItem.get('member')
       });
@@ -80,6 +86,8 @@
     MembersMemberItem.on('removeClick', function(event) {
       event.original.stopPropagation();
       event.original.preventDefault();
+
+      MembersMemberItem.set('deleted', true);
 
       MembersMemberItem.fire('remove', {
         member: MembersMemberItem.get('member')
@@ -90,6 +98,8 @@
       event.original.stopPropagation();
       event.original.preventDefault();
 
+      MembersMemberItem.set('deleted', true);
+
       MembersMemberItem.fire('reactivate', {
         member: MembersMemberItem.get('member')
       });
@@ -99,9 +109,27 @@
       event.original.stopPropagation();
       event.original.preventDefault();
 
+      MembersMemberItem.set('deleted', true);
+
       MembersMemberItem.fire('cancelinvitation', {
         invitation: MembersMemberItem.get('member')
       });
+    });
+
+    MembersMemberItem.on('lastLeaderError', function() {
+      MembersMemberItem.set('deleted', false);
+
+      MembersMemberItem.set('inError', true);
+      MembersMemberItem.set('lastLeaderError', true);
+
+      setTimeout(function() {
+        MembersMemberItem.set('inError', 'hide');
+
+        setTimeout(function() {
+          MembersMemberItem.set('lastLeaderError', false);
+          MembersMemberItem.set('inError', false);
+        }, 550);
+      }, 4000);
     });
 
     MembersMemberItem.on('teardown', function() {

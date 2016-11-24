@@ -70,6 +70,18 @@ module.exports = function() {
         });
       };
 
+      $socket.on('read(groups/group.downmember)', function(args) {
+        if (args && args.error && args.error == 'last-leader') {
+          _this.fire('lastLeaderError');
+        }
+      });
+
+      $socket.on('read(groups/group.member)', function(args) {
+        if (args && args.error && args.error == 'last-leader') {
+          _this.fire('lastLeaderError');
+        }
+      });
+
       this.becomeMember = function(url, member) {
         $socket.emit('update(groups/group.downmember)', {
           url: url,

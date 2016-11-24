@@ -10,6 +10,7 @@
   ) {
     var _web = $Page.get('web'),
         _defaultCover = '/public/groups/group.png',
+        _lastMemberElement = null,
         GroupsGroup = $component({
           data: $.extend(true, {
             invitMembers: null,
@@ -85,6 +86,14 @@
       }
     }
 
+    GroupsService.onSafe('groupsGroupController.lastLeaderError', function() {
+      if (!_lastMemberElement) {
+        return;
+      }
+
+      _lastMemberElement.fire('lastLeaderError');
+    });
+
     GroupsService.onSafe('groupsGroupController.openGroup', function(args) {
       if (!args || !args.url) {
         return;
@@ -96,7 +105,6 @@
         url = url.substr(0, url.length - 1);
       }
 
-
       GroupsGroup.set('groupUrl', url);
 
       url = '/groups/' + url;
@@ -104,6 +112,8 @@
       GroupsGroup.set('pageFilter', '');
       GroupsGroup.set('pageItemsCount', 25);
       GroupsGroup.set('page', args.page || null);
+
+      _lastMemberElement = null;
 
       $RealTimeService.realtimeComponent('groupsGroupController', {
         name: 'groups-group:' + args.url,
@@ -132,8 +142,14 @@
             GroupsGroup.set('membersUrl', url + '/' + (args.group.special == 'deactivated' ? 'deactivated' : 'members'));
             GroupsGroup.set('invitationsUrl', url + '/invitations');
 
-            GroupsGroup.set('canBecomeMember', args.group.activeUserisLeader);
-            GroupsGroup.set('canRemoveMember', args.group.activeUserisLeader && (!args.group.special || args.group.special != 'deactivated'));
+            GroupsGroup.set('canBecomeMember',
+              args.group.activeUserisLeader &&
+              (!args.group.special || (args.group.special != 'deactivated' && args.group.special != 'unknowns'))
+            );
+            GroupsGroup.set('canRemoveMember',
+              args.group.activeUserisLeader &&
+              (!args.group.special || (args.group.special != 'deactivated' && args.group.special != 'members'))
+            );
             GroupsGroup.set('canReactivateDeactivated', args.group.activeUserisLeader && args.group.special == 'deactivated');
             GroupsGroup.set('canCancelInvitation', args.group.activeUserisLeader);
           }
@@ -180,23 +196,28 @@
       init: false
     });
 
-    GroupsGroup.on('becomemember', function(element, list, args) {
+    GroupsGroup.on('becomemember', function(list, element, args) {
+      _lastMemberElement = element;
+
       GroupsService.becomeMember(GroupsGroup.get('groupUrl'), args.member);
     });
 
-    GroupsGroup.on('remove', function(element, list, args) {
+    GroupsGroup.on('remove', function(list, element, args) {
+      _lastMemberElement = element;
+
       GroupsService.removeMember(GroupsGroup.get('groupUrl'), args.member);
     });
 
-    GroupsGroup.on('reactivate', function(element, list, args) {
+    GroupsGroup.on('reactivate', function(list, element, args) {
       GroupsService.reactivate(args.member);
     });
 
-    GroupsGroup.on('cancelinvitation', function(element, list, args) {
+    GroupsGroup.on('cancelinvitation', function(list, element, args) {
       GroupsService.cancelinvitation(GroupsGroup.get('groupUrl'), args.invitation);
     });
 
     GroupsGroup.on('teardown', function() {
+      _lastMemberElement = null;
       GroupsGroup = null;
       _$el = null;
       $RealTimeService.unregisterComponent('groupsGroupController');

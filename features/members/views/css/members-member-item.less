@@ -15,6 +15,10 @@
     .transform(translateX(0));
   }
 
+  &.fade {
+    opacity: 0.2;
+  }
+
   &.members-member-item-thumbnail {
     width: 3rem;
     height: 3rem;
@@ -139,5 +143,41 @@
     padding: 0 1rem;
     line-height: 1;
     margin-bottom: 0.5rem;
+  }
+
+  .members-member-item-error {
+    opacity: 0;
+    position: absolute;
+    top: 50%;
+    left: 2rem;
+    right: 2rem;
+    z-index: 1;
+    padding: 1rem;
+    color: white;
+    font-weight: 400;
+    font-size: 1.8rem;
+    opacity: 0.95;
+    margin-top: 15rem;
+    .transform(translateY(-50%));
+
+    &.hide {
+      margin-top: -15rem;
+    }
+  }
+
+  &.in-error {
+    .members-member-item-error {
+      margin-top: 0;
+      opacity: 1;
+      .transition(all 0.55s @easeOutQuart);
+    }
+  }
+
+  &.in-error-hide {
+    .members-member-item-error {
+      margin-top: -15rem;
+      opacity: 0;
+      .transition(all 0.55s @easeOutQuart);
+    }
   }
 }

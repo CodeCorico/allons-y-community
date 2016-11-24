@@ -5,6 +5,8 @@
     {{(notransition && notransition == 'true') || show ? 'show' : ''}}
     {{selected ? 'selected' : ''}}
     {{cls ? cls : ''}}
+    {{deleted ? 'fade' : ''}}
+    {{inError == 'hide' ? 'in-error-hide' : (inError ? 'in-error' : '')}}
     {{(index + 1) % 2 === 0 ? 'index-2' : ''}}
     {{(index + 1) % 3 === 0 ? 'index-3' : ''}}
   "
@@ -37,6 +39,12 @@
       <button class="members-member-button warning-bg" on-click="cancelinvitationClick">{{_('Cancel invitation')}}</button>
     {{/if}}
   {{/if}}
+
+  <div class="members-member-item-error error-bg">
+    {{#if lastLeaderError}}
+      {{_('You can\'t remove the last leader of a group.')}}
+    {{/if}}
+  </div>
 
   {{> members-member-item-extend}}
 </a>
