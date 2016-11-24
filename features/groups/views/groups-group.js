@@ -192,8 +192,8 @@
       console.log('reactivate');
     });
 
-    GroupsGroup.on('cancelinvitation', function() {
-      console.log('cancelinvitation');
+    GroupsGroup.on('cancelinvitation', function(element, list, args) {
+      GroupsService.cancelinvitation(GroupsGroup.get('groupUrl'), args.invitation);
     });
 
     GroupsGroup.on('teardown', function() {

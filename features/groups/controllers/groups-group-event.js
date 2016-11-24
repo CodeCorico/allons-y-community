@@ -271,6 +271,92 @@ module.exports = [{
       });
   }
 }, {
+  event: 'delete(groups/group.invitation)',
+  isMember: true,
+  controller: function($socket, $message, GroupModel, UserModel, $SocketsService) {
+    if (!this.validMessage($message, {
+      url: ['string', 'filled'],
+      invitationId: 'filled'
+    })) {
+      return;
+    }
+
+    GroupModel
+      .findOne({
+        url: $message.url
+      })
+      .exec(function(err, group) {
+        if (err || !group) {
+          return;
+        }
+
+        if (!$socket.user.isMembersLeader && !$socket.user.hasPermission('groups-leader:' + group.id)) {
+          return;
+        }
+
+        group.invitations = group.invitations || [];
+
+        var memberUrl = null,
+            notificationId = null;
+
+        for (var i = group.invitations.length - 1; i >= 0; i--) {
+          if (group.invitations[i].id == $message.invitationId) {
+            memberUrl = group.invitations[i].url;
+            notificationId = group.invitations[i].notificationId;
+            group.invitations.splice(i, 1);
+
+            break;
+          }
+        }
+
+        if (!memberUrl) {
+          return;
+        }
+
+        GroupModel
+          .update({
+            id: group.id
+          }, {
+            invitations: group.invitations
+          })
+          .exec(function() {
+
+            UserModel
+              .findOne({
+                url: memberUrl
+              })
+              .exec(function(err, member) {
+                if (err || !member) {
+                  return;
+                }
+
+                GroupModel.removeInvitationFromUser(member, group.id, notificationId);
+
+                UserModel
+                  .update({
+                    id: member.id
+                  }, {
+                    groupsInvitations: member.groupsInvitations,
+                    notifications: member.notifications
+                  })
+                  .exec(function() {
+                    UserModel.refreshUsersGroupInvitations(group.id);
+
+                    $SocketsService.each(function(socket) {
+                      if (socket && socket.user && socket.user.id && socket.user.id == member.id) {
+                        socket.emit('read(users/notifications)', {
+                          notifications: member.notifications
+                        });
+                      }
+                    });
+                  });
+              });
+
+          });
+
+      });
+  }
+}, {
   event: 'delete(groups/group.member)',
   isMember: true,
   controller: function($socket, $message, GroupModel, UserModel) {

@@ -84,6 +84,13 @@ module.exports = function() {
         });
       };
 
+      this.cancelinvitation = function(url, invitation) {
+        $socket.emit('delete(groups/group.invitation)', {
+          url: url,
+          invitationId: invitation.id
+        });
+      };
+
     })();
 
   }]);
