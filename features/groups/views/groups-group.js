@@ -184,8 +184,8 @@
       GroupsService.becomeMember(GroupsGroup.get('groupUrl'), args.member);
     });
 
-    GroupsGroup.on('remove', function() {
-      console.log('remove');
+    GroupsGroup.on('remove', function(element, list, args) {
+      GroupsService.removeMember(GroupsGroup.get('groupUrl'), args.member);
     });
 
     GroupsGroup.on('reactivate', function() {

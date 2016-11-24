@@ -77,6 +77,13 @@ module.exports = function() {
         });
       };
 
+      this.removeMember = function(url, member) {
+        $socket.emit('delete(groups/group.member)', {
+          url: url,
+          memberId: member.id
+        });
+      };
+
     })();
 
   }]);

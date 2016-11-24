@@ -271,6 +271,47 @@ module.exports = [{
       });
   }
 }, {
+  event: 'delete(groups/group.member)',
+  isMember: true,
+  controller: function($socket, $message, GroupModel, UserModel) {
+    if (!this.validMessage($message, {
+      url: ['string', 'filled'],
+      memberId: ['string', 'filled']
+    })) {
+      return;
+    }
+
+    GroupModel
+      .findOne({
+        url: $message.url
+      })
+      .exec(function(err, group) {
+        if (err || !group) {
+          return;
+        }
+
+        if (!$socket.user.isMembersLeader && !$socket.user.hasPermission('groups-leader:' + group.id)) {
+          return;
+        }
+
+        UserModel
+          .findOne({
+            id: $message.memberId
+          })
+          .exec(function(err, member) {
+            if (err || !member) {
+              return;
+            }
+
+            group.removeMember(member, true, function() {
+              UserModel.refreshUsersGroupLeaders(group.id);
+              UserModel.refreshUsersGroupMembers(group.id);
+            });
+          });
+
+      });
+  }
+}, {
   event: 'update(groups/group.downmember)',
   isMember: true,
   controller: function($socket, $message, GroupModel, UserModel) {
