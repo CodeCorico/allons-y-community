@@ -36,6 +36,7 @@
     window.Ractive.require('/public/users/users-index.css');
 
     var user = $BodyDataService.data('user'),
+        prerender = $BodyDataService.data('prerender'),
         defaultAvatar = '/public/users/avatar.png',
         userProfileButton = null,
         notificationsUnviewedCount = 0,
@@ -176,7 +177,7 @@
         network: profileButtonNetwork
       });
     }
-    else if (user.permissionsPublic.indexOf('members-signin') > -1) {
+    else if (user.permissionsPublic.indexOf('members-signin') > -1 && !prerender) {
       $Page.rightButtonAdd('usersProfile', {
         type: 'indicator',
         image: $Page.get('avatar')(null),
