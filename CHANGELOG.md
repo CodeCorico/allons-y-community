@@ -1,3 +1,9 @@
+<a name="1.0.15"></a>
+# [1.0.15](https://github.com/CodeCorico/allons-y-community/compare/1.0.14...1.0.15) (2016-11-29)
+
+### Features
+* **users index:** don't display the user signin on prerender view [#628899d](https://github.com/CodeCorico/allons-y-community/commit/628899d)
+
 <a name="1.0.14"></a>
 # [1.0.14](https://github.com/CodeCorico/allons-y-community/compare/1.0.13...1.0.14) (2016-11-24)
 
