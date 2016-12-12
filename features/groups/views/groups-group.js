@@ -2,10 +2,10 @@
   'use strict';
 
   window.Ractive.controllerInjection('groups-group', [
-    'GroupsService', '$RealTimeService',
+    'GroupsService', '$RealTimeService', '$BodyDataService',
     '$Page', '$component', '$data', '$done',
   function groupsGroupController(
-    GroupsService, $RealTimeService,
+    GroupsService, $RealTimeService, $BodyDataService,
     $Page, $component, $data, $done
   ) {
     var _web = $Page.get('web'),
@@ -13,32 +13,12 @@
         _lastMemberElement = null,
         GroupsGroup = $component({
           data: $.extend(true, {
+            MODES: GroupsService.MODES,
+            user: $BodyDataService.data('user'),
             invitMembers: null,
             displayAvatar: $Page.get('avatar'),
             displayCover: function(cover) {
               return cover || _defaultCover;
-            },
-
-            invitFocus: function(event, value, component) {
-              GroupsGroup.get('invitChange')(event, value, component);
-            },
-
-            invitChange: function(event, value, component) {
-              GroupsService.findMembers(
-                GroupsGroup.get('group.id'), value, component.get('is') == 'leader', function(members) {
-                  component.set('list', _membersList(members));
-                }
-              );
-            },
-
-            invitSelect: function(event, value, component) {
-              GroupsService.invitMember(
-                GroupsGroup.get('group.id'), value, component.get('is') == 'leader', function(adding) {
-                  if (adding) {
-                    component.clear();
-                  }
-                }
-              );
             }
           }, $data)
         }),
@@ -49,31 +29,8 @@
         _pageFilterTimeout = null,
         _scrolls = null;
 
-    function _membersList(members) {
-      members = members || [];
-
-      members.forEach(function(member) {
-        member.display = '<img src="' + GroupsGroup.get('displayAvatar')(member.avatarMini) + '" /> ' + member.username;
-        member.value = member.email;
-
-        return member;
-      });
-
-      return members;
-    }
-
     function _changeGroup(args, callback) {
-      args.group.permissions = [];
-      if (args.group.permissionsMembers) {
-        args.group.permissions = args.group.permissions.concat(args.group.permissionsMembers.map(function(permission) {
-          return permission.title;
-        }));
-      }
-      if (args.group.permissionsLeaders) {
-        args.group.permissions = args.group.permissions.concat(args.group.permissionsLeaders.map(function(permission) {
-          return permission.title;
-        }));
-      }
+      GroupsService.group(args.group);
 
       GroupsGroup.set('group', args.group);
 
@@ -92,6 +49,30 @@
       }
 
       _lastMemberElement.fire('lastLeaderError');
+    });
+
+    function _modeChanged() {
+      var mode = GroupsService.mode();
+
+      GroupsGroup.set('mode', mode);
+      GroupsGroup.set('editMode', mode == GroupsService.MODES.EDIT || mode == GroupsService.MODES.CREATE);
+    }
+
+    GroupsService.onSafe([
+      'groupsGroupController.selectMode',
+      'groupsGroupController.editMode',
+      'groupsGroupController.createMode'
+    ].join(' '), _modeChanged);
+
+    GroupsService.onSafe('groupsGroupController.openCreateGroup', function() {
+      GroupsGroup.set('group', {
+        name: '',
+        description: ''
+      });
+
+      GroupsGroup.require().then(function() {
+        _$el.layout.find('.edit-name input').focus();
+      });
     });
 
     GroupsService.onSafe('groupsGroupController.openGroup', function(args) {
@@ -138,10 +119,6 @@
 
             document.title = args.group.name + ' - ' + _web.brand;
 
-            GroupsGroup.set('leadersUrl', url + '/leaders');
-            GroupsGroup.set('membersUrl', url + '/' + (args.group.special == 'deactivated' ? 'deactivated' : 'members'));
-            GroupsGroup.set('invitationsUrl', url + '/invitations');
-
             GroupsGroup.set('canBecomeMember',
               args.group.activeUserisLeader &&
               (!args.group.special || (args.group.special != 'deactivated' && args.group.special != 'unknowns'))
@@ -169,7 +146,7 @@
       _beforeTeadown(callback);
     });
 
-    GroupsService.onAsyncSafe('groupsGroupController.teardownGroup', function(args, callback) {
+    GroupsService.onAsyncSafe('groupsGroupController.teardownGroup groupsGroupController.teardown', function(args, callback) {
       _beforeTeadown(function() {
         GroupsGroup.teardown().then(function() {
           callback();

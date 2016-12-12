@@ -1160,9 +1160,9 @@ module.exports = function() {
             date: new Date()
           }, GROUPS_HOME_TILE));
 
-          // $WebCreateService.links(function() {
-          //   _this.webCreateLinks.apply(this, arguments);
-          // });
+          $WebCreateService.links(function() {
+            _this.webCreateLinks.apply(this, arguments);
+          });
         },
 
         webCreateLinks: function(sockets, sections, callback) {

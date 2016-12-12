@@ -7,130 +7,17 @@
 
     <header>
       <div class="row">
-        <div class="six columns">
+        {{#if editMode}}
+          <div class="edit-name">
+            <input type="text" value="{{group.name}}" placeholder="{{_('Name...')}}" />
+          </div>
+          <div class="edit-description">
+            <input type="text" value="{{group.description}}" placeholder="{{_('Add a short but clear description for your group...')}}" />
+          </div>
+        {{else}}
           <h1><a href="{{url}}">{{group.name}}</a></h1>
           <p>{{group.description}}</p>
-        </div>
-        <div class="six columns">
-          {{#if leadersTotal || group.activeUserCanInvitLeaders}}
-            <h3><a href="{{leadersUrl}}">{{_('Leaders')}}</a></h3>
-          {{/if}}
-
-          <div class="groups-group-members">
-            <rv-require
-              name="members-list"
-              src="/public/members/members-list"
-
-              data-type="groupleaders"
-              data-template="thumbnail"
-              data-bindparent-moreurl="leadersUrl"
-              data-count="5"
-              data-notransition="true"
-              data-bindparent-groupid="group.id"
-              data-bindchild-total="leadersTotal"
-              data-on-click="memberClick"
-            ></rv-require>
-
-            <div class="clear"></div>
-          </div>
-
-          <div class="clear"></div>
-
-          {{#if group.activeUserCanInvitLeaders}}
-            <rv-require
-              name="pl-autocomplete"
-              src="/public/vendor/plumes/autocomplete/pl-autocomplete"
-              class="groups-group-invit-autocomplete-container"
-
-              data-is="leader"
-              data-listposition="bottom"
-              data-autoselection="false"
-              data-placeholder="{{_('Invite new leaders...')}}"
-              data-cls="groups-group-invit-autocomplete"
-              data-selectioncls="groups-group-invit-autocomplete-selection"
-              data-inputcls="groups-group-invit-autocomplete-input"
-              data-listcls="groups-group-invit-autocomplete-list"
-              data-bind-focus="invitFocus"
-              data-bind-change="invitChange"
-              data-bind-select="invitSelect"
-            ></rv-require>
-
-            <div class="clear"></div>
-          {{/if}}
-
-          {{#if membersTotal || group.activeUserCanInvitMembers}}
-            <h3><a href="{{membersUrl}}">
-              {{_(group.special == 'deactivated' ? 'Deactivated' : 'Members')}}
-            </a></h3>
-          {{/if}}
-
-          <div class="groups-group-members">
-            <rv-require
-              name="members-list"
-              src="/public/members/members-list"
-
-              data-type="groupmembers"
-              data-template="thumbnail"
-              data-bindparent-moreurl="membersUrl"
-              data-count="5"
-              data-notransition="true"
-              data-bindparent-groupid="group.id"
-              data-bindchild-total="membersTotal"
-              data-on-click="memberClick"
-            ></rv-require>
-
-            <div class="clear"></div>
-          </div>
-
-          <div class="clear"></div>
-
-          {{#if group.activeUserCanInvitMembers}}
-            <rv-require
-              name="pl-autocomplete"
-              src="/public/vendor/plumes/autocomplete/pl-autocomplete"
-              class="groups-group-invit-autocomplete-container"
-
-              data-is="member"
-
-              data-listposition="bottom"
-              data-autoselection="false"
-              data-placeholder="{{_(group.special == 'deactivated' ? 'Deactivate members...' : 'Invite new members...')}}"
-              data-cls="groups-group-invit-autocomplete"
-              data-selectioncls="groups-group-invit-autocomplete-selection"
-              data-inputcls="groups-group-invit-autocomplete-input"
-              data-listcls="groups-group-invit-autocomplete-list"
-              data-bind-focus="invitFocus"
-              data-bind-change="invitChange"
-              data-bind-select="invitSelect"
-            ></rv-require>
-
-            <div class="clear"></div>
-          {{/if}}
-
-          {{#if invitationsTotal}}
-            <h3><a href="{{invitationsUrl}}">Invitations</a></h3>
-          {{/if}}
-
-          <div class="groups-group-members">
-            <rv-require
-              name="members-list"
-              src="/public/members/members-list"
-
-              data-type="groupinvitations"
-              data-template="thumbnail"
-              data-bindparent-moreurl="invitationsUrl"
-              data-count="5"
-              data-notransition="true"
-              data-bindparent-groupid="group.id"
-              data-bindchild-total="invitationsTotal"
-              data-on-click="memberClick"
-            ></rv-require>
-
-            <div class="clear"></div>
-          </div>
-
-          <div class="clear"></div>
-        </div>
+        {{/if}}
       </div>
     </header>
 
@@ -211,19 +98,6 @@
           data-on-cancelinvitation="cancelinvitation"
         ></rv-require>
 
-      {{elseif group.permissions.length}}
-        <div class="row">
-          <div class="four columns">
-            <div class="groups-group-widget">
-              {{_('Permissions')}}
-              <ul>
-                {{#group.permissions}}
-                <li>{{.}}</li>
-                {{/group.permissions}}
-              </ul>
-            </div>
-          </div>
-        </div>
       {{/if}}
     </section>
 
