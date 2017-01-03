@@ -30,7 +30,7 @@ module.exports = [{
           return;
         }
 
-        if (!$message.isLeader && (group.special == 'unknowns' || group.special == 'members' || group.special == 'deactivated')) {
+        if (!$message.isLeader && (group.special == 'unknowns' || group.special == 'members')) {
           return;
         }
 
