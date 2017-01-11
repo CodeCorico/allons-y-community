@@ -2390,7 +2390,8 @@ module.exports = function() {
         },
 
         updateGroup: function(user, groupData, callback) {
-          var _this = this;
+          var _this = this,
+              UserModel = DependencyInjection.injector.model.get('UserModel');
 
           callback = callback || function() {};
 
@@ -2423,7 +2424,7 @@ module.exports = function() {
               group.search1 = group.name;
               group.search3 = group.description;
 
-              _this.updatePermissions(user, group, groupData.permissions, function() {
+              _this.updatePermissions(user, group, groupData.permissions, function(err, permissionsUpdated) {
                 _this
                   .update({
                     id: group.id
@@ -2449,6 +2450,39 @@ module.exports = function() {
 
                     _this.refreshGroup(group);
                     _this.callGroupsPermissions(null, null, [group.id]);
+
+                    if (!permissionsUpdated) {
+                      return callback();
+                    }
+
+                    var leaders = group.members.filter(function(member) {
+                      return member.isLeader && member.id != user.id;
+                    });
+
+                    if (!leaders.length) {
+                      return callback();
+                    }
+
+                    UserModel.pushNotification(null, leaders.map(function(user) {
+                      return user.id;
+                    }), {
+                      message: 'Permissions changed for <strong>' + group.name + '</strong>!',
+                      content: [
+                        '<strong>' + user.username + '</strong> ',
+                        'has changed the permissions of ',
+                        '<strong>' + group.name + '</strong>'
+                      ].join(''),
+                      picture: group.coverMini || '/public/groups/group-mini.png',
+                      pushTitle: 'Permissions changed for ' + group.name + ' - ' + process.env.BRAND,
+                      pushContent: user.username + ' has changed the permissions of ' + group.name,
+                      pushPicture: '/public/groups/group-notification.jpg',
+                      eventName: 'url',
+                      eventArgs: {
+                        url: '/groups/' + group.url
+                      }
+                    }, function() {
+                      callback();
+                    });
                   });
               });
             });
