@@ -2465,6 +2465,8 @@ module.exports = function() {
               },
               linkedGroups = {};
 
+          callback = callback || function() {};
+
           group.permissionsLeaders = group.permissionsLeaders || [];
           group.permissionsMembers = group.permissionsMembers || [];
 
@@ -2597,7 +2599,9 @@ module.exports = function() {
                     permissionsMembers: groupToUpdate.permissionsMembers
                   })
                   .exec(function() {
-                    nextGroup();
+                    groupToUpdate.flushPermissions(null, function() {
+                      nextGroup();
+                    });
                   });
               });
 
@@ -2612,7 +2616,9 @@ module.exports = function() {
                 permissionsLinked: group.permissionsLinked
               })
               .exec(function() {
-                callback();
+                group.flushPermissions(null, function() {
+                  callback(null, true);
+                });
               });
           });
         },
