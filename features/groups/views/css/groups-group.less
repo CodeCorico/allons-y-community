@@ -1,5 +1,11 @@
 @import "web";
 
+@-webkit-keyframes groups-group-edit-cover-show { 0% { .transform(scale(0)); } 100% { .transform(scale(1)); } }
+@-moz-keyframes groups-group-edit-cover-show { 0% { .transform(scale(0)); } 100% { .transform(scale(1)); } }
+@-ms-keyframes groups-group-edit-cover-show { 0% { .transform(scale(0)); } 100% { .transform(scale(1)); } }
+@-o-keyframes groups-group-edit-cover-show { 0% { .transform(scale(0)); } 100% { .transform(scale(1)); } }
+@keyframes groups-group-edit-cover-show { 0% { .transform(scale(0)); } 100% { .transform(scale(1)); } }
+
 .groups-group {
   position: absolute;
   top: 0;
@@ -13,10 +19,108 @@
     -webkit-appearance: none;
   }
 
+  .groups-group-edit-cover-upload {
+    z-index: 2;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 0;
+    width: 0;
+    background: #333;
+    color: white;
+    overflow: hidden;
+    .transition(all 0.35s @easeOutQuart);
+
+    .groups-group-edit-cover-upload-content {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 15rem;
+      width: 20rem;
+      background: #333;
+      color: white;
+    }
+
+    &.opened {
+      width: 20rem;
+      height: 15rem;
+    }
+
+    .dropzone {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: 0;
+      background: transparent;
+      border: none;
+
+      &.dz-clickable .dz-message {
+        margin-top: 30px;
+        color: white;
+      }
+
+      .dz-preview {
+        position: absolute;
+        left: 50%;
+        margin-left: -4rem;
+        margin-top: 1rem;
+        background: #333;
+
+        .dz-image {
+          width: 90px;
+          height: 90px;
+        }
+      }
+
+      .dz-preview.dz-error .dz-error-mark,
+      .dz-preview.dz-success .dz-success-mark {
+        color: white;
+        font-size: 4rem;
+        padding: 10px;
+        border-radius: 50%;
+        width: 6rem;
+        height: 6rem;
+        text-align: center;
+        line-height: 1.1;
+      }
+
+      .dz-preview.dz-success .dz-success-mark {
+        background: rgba(76, 175, 80, 0.8);
+      }
+
+      .dz-preview.dz-error .dz-error-mark {
+        background: rgba(255, 102, 0, 0.8);
+      }
+    }
+  }
+
+  .groups-group-edit-cover {
+    .noselect(pointer);
+    z-index: 2;
+    position: absolute;
+    top: 0.4rem;
+    right: 2rem;
+
+    i {
+      color: white;
+      font-size: 2rem;
+      opacity: 0.5;
+      text-shadow: 0 0 1px black;
+      .animation(groups-group-edit-cover-show 1s @easeOutQuart);
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
   .edit-name, .edit-description {
     position: relative;
     box-sizing: border-box;
     margin-left: -1rem;
+    margin-right: -1rem;
     padding: 0.5rem 1rem;
     background: rgba(255, 255, 255, 0.2);
 
@@ -91,6 +195,87 @@
     }
   }
 
+  .groups-group-edit-bar-container {
+    position: absolute;
+    top: -1px;
+    left: 3rem;
+    right: 0;
+    height: 29px;
+    overflow: hidden;
+  }
+
+  .groups-group-edit-bar {
+    z-index: 2;
+    position: absolute;
+    box-sizing: border-box;
+    top: -29px;
+    left: 0;
+    height: 29px;
+    padding: 0 1rem 0.5rem;
+    background: white;
+    overflow: hidden;
+    .transition(top 0.33s @easeOutQuart);
+    line-height: 1.6;
+
+    &.show {
+      top: 0;
+    }
+
+    a, span {
+      position: relative;
+      cursor: pointer;
+      display: inline-block;
+      color: #222;
+      margin: 0 0.5rem;
+      font-size: 1.6rem;
+      line-height: 1.5;
+      text-decoration: none;
+      vertical-align: top;
+
+      &.text-only {
+        cursor: default;
+      }
+
+      &.save {
+        cursor: default;
+        color: #ccc;
+
+        &.can-save {
+          cursor: pointer;
+          color: @accentColor;
+        }
+
+        &.saving {
+          font-style: italic;
+        }
+      }
+
+      &.close {
+        &.close-disabled {
+          cursor: default;
+          color: #ccc;
+        }
+      }
+
+      &.confirm {
+        color: @accentColor;
+      }
+    }
+
+    a:hover {
+      color: @accentColor;
+      text-decoration: none;
+    }
+
+    .groups-group-editing {
+      background: @accentColor;
+      color: white;
+      margin: 0 0 0 -1rem;
+      padding: 0.5rem 1rem 0.8rem 1rem;
+      line-height: 1;
+    }
+  }
+
   h1 {
     a, a:hover, a:visited {
       color: white;
@@ -98,7 +283,7 @@
     }
 
     a:hover {
-      text-decoration: underline;
+      border-bottom: 2px solid white;
     }
   }
 
@@ -110,7 +295,7 @@
     .row {
       z-index: 1;
       position: relative;
-      padding: 3rem;
+      padding: 5rem 3rem 3rem;
       color: white;
     }
   }
@@ -204,8 +389,19 @@
     margin: 0 0 1% 0;
   }
 
-  .groups-group header .row {
-    padding: 1rem;
+  .groups-group {
+    .edit-name {
+      margin-top: -1.2rem;
+
+      input {
+        font-size: 4rem;
+        line-height: 6rem;
+      }
+    }
+
+    header .row {
+      padding: 5rem 1rem 1rem;
+    }
   }
 
   .groups-group-body {

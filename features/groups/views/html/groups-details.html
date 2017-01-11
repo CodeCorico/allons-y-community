@@ -8,7 +8,7 @@
   {{/tabs}}
 </div>
 
-<div class="groups-details">
+<div class="groups-details {{editMode ? 'edit' : ''}}">
 
   <rv-require name="pl-scrolls" src="/public/vendor/plumes/scrolls/pl-scrolls"></rv-require>
 
@@ -31,6 +31,7 @@
           {{elseif leadersTotal || group.activeUserCanInvitLeaders}}
             <h3>
               <a href="{{leadersUrl}}">{{_('Leaders')}}</a>
+              <span class="count">{{leadersTotal}}</span>
               <a href="{{leadersUrl}}" class="groups-details-section-see-all">see all</a>
             </h3>
           {{/if}}
@@ -86,11 +87,12 @@
             {{#if membersTotal || group.activeUserCanInvitMembers}}
               <h3>
                 <a href="{{membersUrl}}">{{_(group.special == 'deactivated' ? 'Deactivated' : 'Members')}}</a>
+                <span class="count">{{membersTotal}}</span>
                 <a href="{{membersUrl}}" class="groups-details-section-see-all">see all</a>
               </h3>
             {{/if}}
 
-            <div class="groups-group-members">
+            <div class="groups-group-members {{membersTotal ? '' : 'hide'}}">
               <rv-require
                 name="members-list"
                 src="/public/members/members-list"
@@ -168,31 +170,138 @@
       <section class="pl-section s-permissions">
         <h2 class="pl-title">{{_('Permissions')}}</h2>
 
-        <div class="groups-group-permissions-edition">
-          <div class="groups-group-permissions-edition-row">
-            <label>{{_('Who can see this group:')}}</label>
-            <div class="groups-group-permissions-edition-content">
-              Only me
-            </div>
-          </div>
-          <div class="groups-group-permissions-edition-row">
-            <label>{{_('Who can see this group adzadaz zd:')}}</label>
-            <div class="groups-group-permissions-edition-content">
-              Only me
-            </div>
-          </div>
-        </div>
+        {{#group.specialDescription}}
+          <div class="special-description">{{_(group.specialDescription)}}</div>
+        {{/group.specialDescription}}
 
-        <div class="row">
-          <div class="four columns">
-            <div class="groups-group-widget">
-              {{_('Permissions')}}
-              <ul>
-                {{#group.permissions}}
-                <li>{{.}}</li>
-                {{/group.permissions}}
-              </ul>
-            </div>
+        <div class="groups-details-section-body">
+          <h4>{{_('Who can see this group')}}</h4>
+          <div class="groups-details-permissions">
+            {{#permissions.canSeeGroups}}
+              <span class="
+                groups-details-permission
+                {{this.fixed ? 'fixed' : ''}}
+                {{this.delete ? 'delete' : ''}}
+                {{this.ownLeaders || this.ownMembers ? 'own' : ''}}
+              ">
+                {{this.ownLeaders ? _('Own leaders') : (this.ownMembers ? _('Own members') : this.name)}}
+                <span class="groups-details-permission-remove" on-click="removePermissionGroup" title="{{_('Remove')}}">
+                  <i class="groups-details-permission-cross"></i>
+                </span>
+              </span>
+            {{/permissions.canSeeGroups}}
+          </div>
+
+          {{#if editMode}}
+            <rv-require
+              name="pl-autocomplete"
+              src="/public/vendor/plumes/autocomplete/pl-autocomplete"
+
+              data-keypath="permissions.canSeeGroups"
+
+              data-placeholder="{{_('Search for a group...')}}"
+              data-cls="groups-details-permissions-autocomplete"
+              data-selectioncls="groups-details-permissions-autocomplete-selection"
+              data-inputcls="groups-details-permissions-autocomplete-input"
+              data-listcls="groups-details-permissions-autocomplete-list"
+              data-bind-focus="newGroupFocus"
+              data-bind-blur="newGroupBlur"
+              data-bind-change="newGroupChange"
+              data-bind-select="newGroupSelect"
+            ></rv-require>
+          {{/if}}
+
+          <h4>{{_('Who can see the leaders')}}</h4>
+          <div class="groups-details-permissions">
+            {{#permissions.canSeeLeadersGroups}}
+              <span class="
+                groups-details-permission
+                {{this.fixed ? 'fixed' : ''}}
+                {{this.delete ? 'delete' : ''}}
+                {{this.ownLeaders || this.ownMembers ? 'own' : ''}}
+              ">
+                {{this.ownLeaders ? _('Own leaders') : (this.ownMembers ? _('Own members') : this.name)}}
+                <span class="groups-details-permission-remove" on-click="removePermissionGroup" title="{{_('Remove')}}">
+                  <i class="groups-details-permission-cross"></i>
+                </span>
+              </span>
+            {{/permissions.canSeeLeadersGroups}}
+          </div>
+
+          {{#if editMode}}
+            <rv-require
+              name="pl-autocomplete"
+              src="/public/vendor/plumes/autocomplete/pl-autocomplete"
+
+              data-keypath="permissions.canSeeLeadersGroups"
+
+              data-placeholder="{{_('Search for a group...')}}"
+              data-cls="groups-details-permissions-autocomplete"
+              data-selectioncls="groups-details-permissions-autocomplete-selection"
+              data-inputcls="groups-details-permissions-autocomplete-input"
+              data-listcls="groups-details-permissions-autocomplete-list"
+              data-bind-focus="newGroupFocus"
+              data-bind-blur="newGroupBlur"
+              data-bind-change="newGroupChange"
+              data-bind-select="newGroupSelect"
+            ></rv-require>
+          {{/if}}
+
+          <h4>{{_('Who can see the members')}}</h4>
+          <div class="groups-details-permissions">
+            {{#permissions.canSeeMembersGroups}}
+              <span class="
+                groups-details-permission
+                {{this.fixed ? 'fixed' : ''}}
+                {{this.delete ? 'delete' : ''}}
+                {{this.ownLeaders || this.ownMembers ? 'own' : ''}}
+              ">
+                {{this.ownLeaders ? _('Own leaders') : (this.ownMembers ? _('Own members') : this.name)}}
+                <span class="groups-details-permission-remove" on-click="removePermissionGroup" title="{{_('Remove')}}">
+                  <i class="groups-details-permission-cross"></i>
+                </span>
+              </span>
+            {{/permissions.canSeeMembersGroups}}
+          </div>
+
+          {{#if editMode}}
+            <rv-require
+              name="pl-autocomplete"
+              src="/public/vendor/plumes/autocomplete/pl-autocomplete"
+
+              data-keypath="permissions.canSeeMembersGroups"
+
+              data-placeholder="{{_('Search for a group...')}}"
+              data-cls="groups-details-permissions-autocomplete"
+              data-selectioncls="groups-details-permissions-autocomplete-selection"
+              data-inputcls="groups-details-permissions-autocomplete-input"
+              data-listcls="groups-details-permissions-autocomplete-list"
+              data-bind-focus="newGroupFocus"
+              data-bind-blur="newGroupBlur"
+              data-bind-change="newGroupChange"
+              data-bind-select="newGroupSelect"
+            ></rv-require>
+          {{/if}}
+
+          <h4>{{_('Special permissions')}}</h4>
+          {{#if editMode}}
+          <p class="groups-details-permissions-checks-tip">{{_('Click to select/unselect permissions:')}}</p>
+          {{/if}}
+          <div class="groups-details-permissions groups-details-permissions-checks">
+            {{#if !permissions.publicPermissions.length}}
+              <span class="groups-details-permission-none">{{_('None.')}}</span>
+            {{/if}}
+            {{#permissions.publicPermissions}}
+              {{#if this.selected || editMode}}
+                <span
+                  class="groups-details-permission {{this.selected ? 'selected' : ''}}"
+                  title="{{this.description}}"
+                  on-click="togglePublicPermission"
+                >
+                  {{this.title}}
+                </span>
+              {{/if}}
+            {{/permissions.publicPermissions}}
           </div>
         </div>
 

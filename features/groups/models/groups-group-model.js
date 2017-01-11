@@ -14,11 +14,15 @@ module.exports = function() {
           },
           'groups-member': {
             call: 'callGroupsMember'
+          },
+          'groups-permissions': {
+            call: 'callGroupsPermissions'
           }
         },
         SPECIALS_GROUPS = [{
           name: 'Members',
           special: 'members',
+          specialDescription: 'Every registered user depends from this group. It can\'t be deleted.',
           description: 'Each signed user is automatically registered to this group.',
           permissionsMembers: [
             'groups-create',
@@ -29,6 +33,7 @@ module.exports = function() {
         }, {
           name: 'Unknowns',
           special: 'unknowns',
+          specialDescription: 'This group permissions are used to the unsigned visitors users. It can\'t be deleted.',
           description: 'Unsigned visitors. This group has no members.',
           permissionsMembers: [
             'members-signup', 'members-signin'
@@ -39,6 +44,10 @@ module.exports = function() {
         }, {
           name: 'Deactivated',
           special: 'deactivated',
+          specialDescription: [
+            'Every deactivated user depends from this group. They can\'t sign in the plateform.',
+            ' This group can\'t be deleted.'
+          ].join(''),
           description: 'Deactivated members. Every member added here is deactivated and can\'t signin again.',
           permissionsLinked: [
             'groups-see:{{members}}', 'groups-see-leaders:{{members}}'
@@ -50,7 +59,7 @@ module.exports = function() {
             url: '/groups/create',
             image: '/public/groups/groups-web-create-thumb.png',
             title: 'Empty group',
-            description:  'Create a new empty group as a leader.'
+            description: 'Create a new empty group as a leader.'
           }]
         },
         GROUPS_HOME_TILE = {
@@ -799,34 +808,6 @@ module.exports = function() {
             return this.addInvitations(leader, [user], isLeader, callback);
           },
 
-          initPermissions: function(callback) {
-            var _this = this,
-                GroupModel = DependencyInjection.injector.model.get('GroupModel');
-
-            this.permissionsMembers = [];
-            this.permissionsLeaders = [];
-
-            Object.keys(_permissions).forEach(function(key) {
-              var permission = key + (_permissions[key].linked ? ':' + _this.id : '');
-
-              if (_permissions[key].requiredOnMember) {
-                _this.permissionsMembers.push(permission);
-              }
-              if (_permissions[key].requiredOnLeader) {
-                _this.permissionsLeaders.push(permission);
-              }
-            });
-
-            GroupModel
-              .update({
-                id: _this.id
-              }, {
-                permissionsMembers: _this.permissionsMembers,
-                permissionsLeaders: _this.permissionsLeaders
-              })
-              .exec(callback);
-          },
-
           addPermissions: function(type, permissions, flush, callback) {
             var _this = this,
                 GroupModel = DependencyInjection.injector.model.get('GroupModel'),
@@ -1044,6 +1025,8 @@ module.exports = function() {
                     });
                   }
 
+                  member.permissions = member.permissions || [];
+
                   member.groups.forEach(function(group) {
                     var cacheGroup = cacheGroups[cacheGroupsId.indexOf(group.id)];
 
@@ -1229,7 +1212,7 @@ module.exports = function() {
                   delete groupConfig[permissionsName];
                 });
 
-                _this.createGroup(groupConfig, function(err, group) {
+                _this.createGroup(null, groupConfig, function(err, group) {
                   if (err) {
                     $allonsy.logError('allons-y-community', 'groups:group-model:init:create-special', {
                       error: err
@@ -1316,17 +1299,32 @@ module.exports = function() {
             });
         },
 
-        createGroup: function(data, callback) {
-          var GroupModel = DependencyInjection.injector.model.get('GroupModel');
+        createGroup: function(user, groupData, callback) {
+          callback = callback || function() {};
 
-          data.search1 = data.name || null;
-          data.search3 = data.description || null;
+          if (user && !user.isMembersLeader && (!user.hasPermission || !user.hasPermission('groups-create'))) {
+            return callback('no permission');
+          }
 
-          data.createdAt = new Date();
-          data.updatedAt = data.createdAt;
+          if (!groupData || typeof groupData != 'object' || !groupData.name) {
+            return callback('no valid data');
+          }
+
+          var _this = this,
+              GroupModel = DependencyInjection.injector.model.get('GroupModel');
+
+          groupData.description = groupData.description || '';
+          groupData.cover = groupData.cover || null;
+          groupData.coverMini = groupData.coverMini || null;
+          groupData.coverThumb = groupData.coverThumb || null;
+          groupData.coverLarge = groupData.coverLarge || null;
+          groupData.search1 = groupData.name;
+          groupData.search3 = groupData.description;
+          groupData.createdAt = new Date();
+          groupData.updatedAt = groupData.createdAt;
 
           this
-            .create(data)
+            .create(groupData)
             .exec(function(err, group) {
               if (err || !group) {
                 return callback(err || 'no group');
@@ -1337,46 +1335,61 @@ module.exports = function() {
                   return callback(err);
                 }
 
-                GroupModel
-                  .update({
-                    id: group.id
-                  }, {
-                    url: group.url
-                  })
-                  .exec(function() {
+                _this.updatePermissions(user, group, groupData.permissions, function() {
 
-                    group.initPermissions(function(err) {
-                      if (err) {
-                        return callback(err);
-                      }
-
+                  GroupModel
+                    .update({
+                      id: group.id
+                    }, {
+                      url: group.url,
+                      permissionsMembers: group.permissionsMembers,
+                      permissionsLeaders: group.permissionsLeaders
+                    })
+                    .exec(function() {
                       $allonsy.log('allons-y-community', 'groups:group-create:' + group.id, {
-                        label: 'Create new group <span class="accent">[' + group.name + ']</span>'
+                        label: 'Create new group <span class="accent">[' + group.name + ']</span>',
+                        user: user && user.email || null
                       });
 
-                      callback(null, group);
+                      if (!user) {
+                        return callback(null, group);
+                      }
+
+                      group.addLeader(user, true, function() {
+                        callback(null, group);
+                      });
                     });
-                  });
+                });
               });
             });
         },
 
-        deleteGroup: function(idOrUrl, callback) {
+        deleteGroup: function(user, id, callback) {
+          callback = callback || function() {};
+
+          if (!id) {
+            return callback('no id');
+          }
+
+          if (user && !user.isMembersLeader && (!user.hasPermission || !user.hasPermission('groups-leader:' + id))) {
+            return callback('no permission');
+          }
+
           var _this = this,
               GroupModel = DependencyInjection.injector.model.get('GroupModel'),
               UserModel = DependencyInjection.injector.model.get('UserModel');
 
           this
             .findOne({
-              or: [{
-                id: idOrUrl
-              }, {
-                url: idOrUrl
-              }]
+              id: id
             })
             .exec(function(err, group) {
               if (err || !group) {
                 return callback(err || 'group not found');
+              }
+
+              if (group.special) {
+                return callback('group is special');
               }
 
               var members = group.members;
@@ -1444,7 +1457,7 @@ module.exports = function() {
                           return callback(null);
                         }
 
-                        (users || []).forEach(function(user) {
+                        async.eachSeries(users, function(user, nextUser) {
                           user.groups = user.groups || [];
 
                           for (var i = user.groups.length - 1; i >= 0; i--) {
@@ -1454,57 +1467,67 @@ module.exports = function() {
                               break;
                             }
                           }
-                        });
 
-                        group.flushPermissions(users, function(err) {
-                          if (err) {
-                            return callback(err);
-                          }
+                          UserModel
+                            .update({
+                              id: user.id
+                            }, {
+                              groups: user.groups
+                            })
+                            .exec(function() {
+                              nextUser();
+                            });
+                        }, function() {
 
-                          group.invitations = group.invitations || [];
+                          group.flushPermissions(users, function(err) {
+                            if (err) {
+                              return callback(err);
+                            }
 
-                          async.eachSeries(group.invitations, function(invitation, nextInvitation) {
+                            group.invitations = group.invitations || [];
 
-                            UserModel
-                              .findOne({
-                                id: invitation.id
-                              })
-                              .exec(function(err, user) {
-                                if (err || !user) {
-                                  return nextInvitation();
-                                }
+                            async.eachSeries(group.invitations, function(invitation, nextInvitation) {
 
-                                _this.removeInvitationFromUser(user, group.id, invitation.notificationId);
+                              UserModel
+                                .findOne({
+                                  id: invitation.id
+                                })
+                                .exec(function(err, user) {
+                                  if (err || !user) {
+                                    return nextInvitation();
+                                  }
 
-                                UserModel
-                                  .update({
-                                    id: user.id
-                                  }, {
-                                    groupsInvitations: user.groupsInvitations,
-                                    notifications: user.notifications,
-                                    groups: user.groups
-                                  })
-                                  .exec(function() {
-                                    nextInvitation();
-                                  });
-                              });
-                          }, function() {
-                            _this
-                              .destroy({
-                                id: group.id
-                              })
-                              .exec(function(err) {
-                                $allonsy.log('allons-y-community', 'groups:group-delete:' + group.id, {
-                                  label: 'Delete group <span class="accent">[' + group.name + ']</span>'
+                                  _this.removeInvitationFromUser(user, group.id, invitation.notificationId);
+
+                                  UserModel
+                                    .update({
+                                      id: user.id
+                                    }, {
+                                      groupsInvitations: user.groupsInvitations,
+                                      notifications: user.notifications,
+                                      groups: user.groups
+                                    })
+                                    .exec(function() {
+                                      nextInvitation();
+                                    });
                                 });
+                            }, function() {
+                              _this
+                                .destroy({
+                                  id: group.id
+                                })
+                                .exec(function(err) {
+                                  $allonsy.log('allons-y-community', 'groups:group-delete:' + group.id, {
+                                    label: 'Delete group <span class="accent">[' + group.name + ']</span>',
+                                    user: user && user.email || null
+                                  });
 
-                                callback(err);
-                              });
+                                  callback(err, group);
+                                });
+                            });
                           });
                         });
-
                       });
-
                   });
                 });
             });
@@ -1523,7 +1546,9 @@ module.exports = function() {
             for (var key in _permissions) {
               if (_permissions.hasOwnProperty(key) && key == permissionName) {
                 if (_permissions[key].isPublic) {
-                  permissionsPublic.push(fullObject ? _permissions[key] : permission);
+                  permissionsPublic.push(fullObject ? extend(true, {
+                    name: key
+                  }, _permissions[key]) : permission);
                 }
 
                 break;
@@ -1790,6 +1815,203 @@ module.exports = function() {
           });
         },
 
+        callGroupsPermissions: function($socket, eventName, args, callback) {
+          if (!args || !args.length) {
+            if (callback) {
+              callback();
+            }
+
+            return;
+          }
+
+          eventName = eventName || 'groups-permissions:' + args[0];
+
+          var _this = this,
+              sockets = [$socket];
+
+          if (!$socket) {
+            sockets = $RealTimeService.socketsFromOrigin('groups-permissions', [args[0]]) || [];
+
+            if (!sockets.length) {
+              return;
+            }
+          }
+
+          this
+            .findOne({
+              id: args[0]
+            })
+            .exec(function(err, group) {
+              if (err || !group) {
+                if (callback) {
+                  callback();
+                }
+
+                return;
+              }
+
+              var groupsIds = [],
+                  groupLeaders = {
+                    id: group.id,
+                    name: group.name,
+                    ownLeaders: true
+                  },
+                  groupMembers = {
+                    id: group.id,
+                    name: group.name,
+                    ownMembers: true
+                  },
+                  result = {
+                    canSeeGroups: {},
+                    canSeeLeadersGroups: {},
+                    canSeeMembersGroups: {},
+                    publicPermissions: {}
+                  };
+
+              _this.extractPublicPermissions(group.permissionsMembers, true).forEach(function(permission) {
+                result.publicPermissions[permission.name] = {
+                  name: permission.name,
+                  title: permission.title,
+                  description: permission.description,
+                  selected: true
+                };
+              });
+
+              ['permissionsMembers', 'permissionsLinked'].forEach(function(permissionsSection) {
+                if (!group[permissionsSection] || !group[permissionsSection].length) {
+                  return;
+                }
+
+                group[permissionsSection].forEach(function(permission) {
+                  var id = permission.indexOf(':') > -1 ? permission.split(':')[1] : null;
+
+                  if (
+                    permission.indexOf('groups-see:') > -1 &&
+                    (permissionsSection == 'permissionsLinked' || id == group.id)
+                  ) {
+                    id = permission.replace('groups-see:', '');
+
+                    if (id != group.id) {
+                      result.canSeeGroups[id] = {};
+                    }
+                  }
+                  else if (
+                    permission.indexOf('groups-see-leaders:') > -1 &&
+                    (permissionsSection == 'permissionsLinked' || id == group.id)
+                  ) {
+                    id = permission.replace('groups-see-leaders:', '');
+                    result.canSeeLeadersGroups[id] = id == group.id ? groupMembers : {};
+                  }
+                  else if (
+                    permission.indexOf('groups-see-members:') > -1 &&
+                    (permissionsSection == 'permissionsLinked' || id == group.id)
+                  ) {
+                    id = permission.replace('groups-see-members:', '');
+                    result.canSeeMembersGroups[id] = id == group.id ? groupMembers : {};
+                  }
+
+                  if (id && id != group.id && groupsIds.indexOf(id) < 0) {
+                    groupsIds.push(id);
+                  }
+                });
+              });
+
+              async.waterfall([function(nextFunction) {
+                if (!groupsIds.length) {
+                  return nextFunction();
+                }
+
+                _this
+                  .find({
+                    id: groupsIds
+                  })
+                  .exec(function(err, groupsLinked) {
+                    if (err || !groupsLinked.length) {
+                      return nextFunction();
+                    }
+
+                    groupsLinked.forEach(function(groupLinked) {
+                      ['canSeeGroups', 'canSeeLeadersGroups', 'canSeeMembersGroups'].forEach(function(pemissionSection) {
+                        if (result[pemissionSection][groupLinked.id]) {
+                          result[pemissionSection][groupLinked.id] = {
+                            id: groupLinked.id,
+                            name: groupLinked.name
+                          };
+                        }
+                      });
+                    });
+
+                    nextFunction();
+                  });
+
+              }, function() {
+                ['canSeeGroups', 'canSeeLeadersGroups', 'canSeeMembersGroups'].forEach(function(pemissionSection) {
+                  result[pemissionSection] = Object.keys(result[pemissionSection]).map(function(key) {
+                    return result[pemissionSection][key];
+                  });
+                });
+
+                sockets.forEach(function(socket) {
+                  if (!socket || !socket.user || !socket.user.hasPermission) {
+                    return;
+                  }
+
+                  var resultForUser = extend(true, {}, result);
+
+                  if (!socket.user.hasPermission('groups-see:' + group.id)) {
+                    delete resultForUser.canSeeGroups;
+                  }
+                  if (!socket.user.hasPermission('groups-see-leaders:' + group.id)) {
+                    delete resultForUser.canSeeLeadersGroups;
+                  }
+                  if (!socket.user.hasPermission('groups-see-members:' + group.id)) {
+                    delete resultForUser.canSeeMembersGroups;
+                  }
+
+                  groupLeaders.fixed = true;
+                  groupMembers.fixed = true;
+
+                  resultForUser.canSeeGroups = resultForUser.canSeeGroups || [];
+                  resultForUser.canSeeGroups.unshift(groupLeaders, groupMembers);
+
+                  resultForUser.canSeeLeadersGroups = resultForUser.canSeeLeadersGroups || [];
+                  resultForUser.canSeeLeadersGroups.unshift(groupLeaders);
+
+                  resultForUser.canSeeMembersGroups = resultForUser.canSeeMembersGroups || [];
+                  resultForUser.canSeeMembersGroups.unshift(groupLeaders);
+
+                  Object.keys(_permissions).forEach(function(permissionName) {
+                    if (
+                      (_permissions[permissionName].unknownsOnly && (!group.special || group.special != 'unknowns')) ||
+                      (socket.user.permissionsPublic.indexOf(permissionName) < 0 || resultForUser.publicPermissions[permissionName])
+                    ) {
+                      return;
+                    }
+
+                    resultForUser.publicPermissions[permissionName] = {
+                      name: permissionName,
+                      title: _permissions[permissionName].title,
+                      description: _permissions[permissionName].description
+                    };
+                  });
+
+                  resultForUser.publicPermissions = Object.keys(resultForUser.publicPermissions).sort().map(function(permissionName) {
+                    return resultForUser.publicPermissions[permissionName];
+                  });
+
+                  $RealTimeService.fire(eventName, {
+                    permissions: resultForUser
+                  }, $socket);
+                });
+
+                if (callback) {
+                  callback();
+                }
+              }]);
+            });
+
+        },
+
         removeAllInvitationsFromUser: function(user) {
           var groupsIds = [];
 
@@ -1912,7 +2134,15 @@ module.exports = function() {
             leadersLength: 0
           };
 
-          if (group && group.special == 'unknowns') {
+          if (group.special) {
+            for (var i = 0; i < this.SPECIALS.length; i++) {
+              if (this.SPECIALS[i].special == group.special) {
+                group.specialDescription = this.SPECIALS[i].specialDescription;
+              }
+            }
+          }
+
+          if (group.special == 'unknowns') {
             group.members = group.members.filter(function(member) {
               return member.isLeader;
             });
@@ -2157,6 +2387,312 @@ module.exports = function() {
 
                 });
             });
+        },
+
+        updateGroup: function(user, groupData, callback) {
+          var _this = this;
+
+          callback = callback || function() {};
+
+          if (
+            !user || typeof user != 'object' || !user.hasPermission || !groupData || typeof groupData != 'object' ||
+            !groupData.id || !groupData.name
+          ) {
+            return callback('no valid data');
+          }
+
+          this
+            .findOne({
+              id: groupData.id
+            })
+            .exec(function(err, group) {
+              if (err) {
+                return callback(err);
+              }
+
+              if (!user.isMembersLeader && !user.hasPermission('groups-leader:' + group.id)) {
+                return callback('no leader');
+              }
+
+              group.name = groupData.name;
+              group.description = groupData.description || '';
+              group.cover = groupData.cover || null;
+              group.coverMini = groupData.coverMini || null;
+              group.coverThumb = groupData.coverThumb || null;
+              group.coverLarge = groupData.coverLarge || null;
+              group.search1 = group.name;
+              group.search3 = group.description;
+
+              _this.updatePermissions(user, group, groupData.permissions, function() {
+                _this
+                  .update({
+                    id: group.id
+                  }, {
+                    name: group.name,
+                    description: group.description,
+                    cover: group.cover,
+                    coverMini: group.coverMini,
+                    coverThumb: group.coverThumb,
+                    coverLarge: group.coverLarge,
+                    search1: group.search1,
+                    search3: group.search3
+                  })
+                  .exec(function(err) {
+                    if (err) {
+                      return callback(err);
+                    }
+
+                    $allonsy.log('allons-y-community', 'groups:group-update:' + group.id, {
+                      label: 'Update <span class="accent">[' + group.name + ']</span> group',
+                      user: user.email
+                    });
+
+                    _this.refreshGroup(group);
+                    _this.callGroupsPermissions(null, null, [group.id]);
+                  });
+              });
+            });
+        },
+
+        updatePermissions: function(user, group, permissions, callback) {
+          var _this = this,
+              permissionsLinked = group.permissionsLinked || [],
+              permissionsMembers = extend(true, [], group.permissionsMembers || []),
+              permissionsRef = {
+                canSeeGroups: 'groups-see',
+                canSeeLeadersGroups: 'groups-see-leaders',
+                canSeeMembersGroups: 'groups-see-members'
+              },
+              linkedGroups = {};
+
+          group.permissionsLeaders = group.permissionsLeaders || [];
+          group.permissionsMembers = group.permissionsMembers || [];
+
+          ['permissionsLeaders', 'permissionsMembers'].forEach(function(tableName) {
+            for (var i = 0; i < group[tableName].length; i++) {
+              if (group[tableName][i].indexOf(':') > -1) {
+                var id = group[tableName][i].split(':')[1];
+                if (!linkedGroups[id]) {
+                  linkedGroups[id] = [];
+                }
+              }
+            }
+          });
+
+          group.permissionsLinked = [];
+
+          permissions = permissions || {};
+          permissions.canSeeGroups = permissions.canSeeGroups || [];
+          permissions.canSeeLeadersGroups = permissions.canSeeLeadersGroups || [];
+          permissions.canSeeMembersGroups = permissions.canSeeMembersGroups || [];
+          permissions.publicPermissions = permissions.publicPermissions || [];
+
+          Object.keys(_permissions).forEach(function(key) {
+            var permission = key + (_permissions[key].linked ? ':' + group.id : '');
+            if (_permissions[key].requiredOnMember && group.permissionsMembers.indexOf(permission) < 0) {
+              group.permissionsMembers.push(permission);
+            }
+            if (_permissions[key].requiredOnLeader && group.permissionsLeaders.indexOf(permission) < 0) {
+              group.permissionsLeaders.push(permission);
+            }
+          });
+
+          ['canSeeGroups', 'canSeeLeadersGroups', 'canSeeMembersGroups'].forEach(function(permissionCanName) {
+            var permissionCan = permissions[permissionCanName];
+
+            permissionCan.forEach(function(p) {
+              var permissionToAdd = permissionsRef[permissionCanName] + ':' + p.id;
+
+              if (p.isFixed) {
+                return;
+              }
+
+              if (p.ownLeaders) {
+                permissionToAdd = permissionsRef[permissionCanName] + ':' + group.id;
+
+                if (group.permissionsLeaders.indexOf(permissionToAdd) > -1) {
+                  return;
+                }
+
+                group.permissionsLeaders.push(permissionToAdd);
+
+                return;
+              }
+              else if (p.ownMembers) {
+                permissionToAdd = permissionsRef[permissionCanName] + ':' + group.id;
+
+                if (group.permissionsMembers.indexOf(permissionToAdd) > -1) {
+                  return;
+                }
+
+                group.permissionsMembers.push(permissionToAdd);
+
+                return;
+              }
+
+              linkedGroups[p.id] = linkedGroups[p.id] || [];
+              linkedGroups[p.id].push(permissionsRef[permissionCanName] + ':' + group.id);
+
+              if (group.permissionsLinked.indexOf(permissionToAdd) > -1) {
+                return;
+              }
+
+              group.permissionsLinked.push(permissionToAdd);
+            });
+          });
+
+          permissions.publicPermissions.forEach(function(p) {
+            if (!_permissions[p.name] || !_permissions[p.name].isPublic) {
+              return;
+            }
+
+            var index = group.permissionsMembers.indexOf(p.name);
+
+            if (p.selected && index < 0) {
+              group.permissionsMembers.push(p.name);
+            }
+            else if (!p.selected && index > -1) {
+              group.permissionsMembers.splice(index, 1);
+            }
+          });
+
+          if (
+            group.permissionsMembers.sort().join('') == permissionsMembers.sort().join('') &&
+            group.permissionsLinked.sort().join('') == permissionsLinked.sort().join('')
+          ) {
+            return callback();
+          }
+
+          delete linkedGroups[group.id];
+
+          async.eachSeries(Object.keys(linkedGroups), function(groupId, nextGroup) {
+
+            if (!linkedGroups[groupId].length) {
+              return nextGroup();
+            }
+
+            _this
+              .findOne({
+                id: groupId
+              })
+              .exec(function(err, groupToUpdate) {
+                if (err || !groupToUpdate) {
+                  return nextGroup();
+                }
+
+                var permissionsMembers = groupToUpdate.permissionsMembers.filter(function(permission) {
+                  if (permission.indexOf(':') < 0) {
+                    return true;
+                  }
+
+                  return permission.split(':')[1] != group.id;
+                });
+
+                groupToUpdate.permissionsMembers = permissionsMembers.concat(linkedGroups[groupId]);
+
+                _this
+                  .update({
+                    id: groupId
+                  }, {
+                    permissionsMembers: groupToUpdate.permissionsMembers
+                  })
+                  .exec(function() {
+                    nextGroup();
+                  });
+              });
+
+          }, function() {
+
+            _this
+              .update({
+                id: group.id
+              }, {
+                permissionsLeaders: group.permissionsLeaders,
+                permissionsMembers: group.permissionsMembers,
+                permissionsLinked: group.permissionsLinked
+              })
+              .exec(function() {
+                callback();
+              });
+          });
+        },
+
+        autocomplete: function(user, name, excludes, callback) {
+          var _this = this,
+              findName = '(' + name.toLowerCase() + ')',
+              findQuery = {
+                entityType: this.entityType,
+                name: new RegExp(findName, 'i')
+              },
+              hasOwnLeaders = false,
+              hasOwnMembers = false;
+
+          if (excludes && excludes.length) {
+            findQuery = {
+              $and: [findQuery, {
+                _id: {
+                  $nin: excludes.map(function(exclude) {
+                    if (exclude == -1) {
+                      hasOwnLeaders = true;
+                    }
+                    else if (exclude == -2) {
+                      hasOwnMembers = true;
+                    }
+                    else {
+                      return _this.mongo.objectId(exclude);
+                    }
+
+                    return null;
+                  })
+                }
+              }]
+            };
+          }
+
+          this.native(function(err, collection) {
+            collection
+              .find(findQuery, {}, {
+                limit: 10,
+                sort: [['name', 'asc']]
+              })
+              .toArray(function(err, groups) {
+                if (err || !groups || !groups.length) {
+                  return callback(err, groups);
+                }
+
+                groups = groups
+                  .map(function(group) {
+                    return {
+                      id: group._id,
+                      value: group.name,
+                      display: group.name.replace(new RegExp(findName, 'i'), '<strong>$1</strong>')
+                    };
+                  })
+                  .filter(function(group) {
+                    return user.isMembersLeader || user.hasPermission('groups-see:' + group.id);
+                  });
+
+                if (!hasOwnLeaders) {
+                  groups.unshift({
+                    id: null,
+                    value: null,
+                    display: 'Own leaders',
+                    ownLeaders: true
+                  });
+                }
+
+                if (!hasOwnMembers) {
+                  groups.unshift({
+                    id: null,
+                    value: null,
+                    display: 'Own members',
+                    ownMembers: true
+                  });
+                }
+
+                callback(err, groups);
+              });
+          });
         }
       };
 

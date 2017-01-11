@@ -19,6 +19,10 @@
     });
 
     GroupsService.onAsyncSafe('groupsGroupsController.teardownGroups', function(args, callback) {
+      if (!GroupsGroups) {
+        return callback();
+      }
+
       _beforeTeadown(function() {
         GroupsGroups.teardown().then(function() {
           callback();

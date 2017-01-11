@@ -2,8 +2,10 @@
   'use strict';
 
   window.Ractive.controllerInjection('groups-details', [
+    '$RealTimeService',
     '$BodyDataService', '$socket', '$Page', '$Layout', 'GroupsService', '$component', '$data', '$done',
   function groupsDetailsController(
+    $RealTimeService,
     $BodyDataService, $socket, $Page, $Layout, GroupsService, $component, $data, $done
   ) {
 
@@ -44,6 +46,61 @@
                   }
                 }
               );
+            },
+
+            newGroupFocus: function(event, value, component) {
+              GroupsDetails.get('newGroupChange')(event, value, component);
+            },
+
+            newGroupChange: function(event, value, component) {
+              if (!value) {
+                GroupsService.stopAutocompleteNewGroup();
+                component.clear();
+
+                return;
+              }
+
+              var keypath = component.get('keypath'),
+                  context = GroupsDetails.get(keypath);
+
+              GroupsService.autocompleteNewGroup(
+                value,
+                context.map(function(group) {
+                  return group.ownLeaders ? -1 : (group.ownMembers ? -2 : group.id);
+                }).concat([GroupsDetails.get('group.id')]),
+                function(groups) {
+                  component.set('list', groups.map(function(group) {
+                    if (group.ownLeaders || group.ownMembers) {
+                      group.display = GroupsDetails.get('group.name') + ': ' + group.display;
+                    }
+
+                    return group;
+                  }));
+                }
+              );
+            },
+
+            newGroupSelect: function(event, value, component) {
+              if (typeof event.context.id == 'undefined') {
+                return;
+              }
+
+              var keypath = component.get('keypath'),
+                  context = GroupsDetails.get(keypath),
+                  group = $.extend(true, {}, event.context);
+
+              group.name = group.value;
+              group.delete = false;
+              delete group.value;
+              delete group.display;
+
+              context.push(group);
+
+              GroupsDetails.update(keypath);
+
+              _hasModifications();
+
+              component.clear();
             }
           }, $data),
 
@@ -92,6 +149,10 @@
       return members;
     }
 
+    function _hasModifications() {
+      GroupsService.hasModifications(true);
+    }
+
     function _rightContextOpened(args) {
       if (!args.opened) {
         return;
@@ -105,10 +166,6 @@
         _scrolls.update();
       }, 1200);
     }
-
-    // function _hasModifications() {
-    //   GroupsService.fire('hasModifications');
-    // }
 
     function _closeOnNotDesktop() {
       $Layout.closeOnNotDesktop('group-groups-details');
@@ -153,23 +210,31 @@
       GroupsService.scrollToAnchor('#' + event.context.name.replace(/#/, ''));
     });
 
-    // GroupsService.onAsyncSafe('groupsDetailsController.beforeSave', function(args, callback) {
-    //   var tags = GroupsDetails.get('tags') || [],
-    //       newTags = {};
+    GroupsDetails.on('removePermissionGroup', function(event) {
+      GroupsDetails.set(event.keypath + '.delete', true);
 
-    //   tags.forEach(function(sectionTags) {
-    //     sectionTags.masterTags.forEach(function(masterTag) {
-    //       masterTag.tags.forEach(function(tag) {
-    //         newTags[sectionTags.name] = newTags[sectionTags.name] || [];
-    //         newTags[sectionTags.name].push(masterTag.name + ':' + tag.name);
-    //       });
-    //     });
-    //   });
+      setTimeout(function() {
+        var lastDot = event.keypath.lastIndexOf('.'),
+            parent = event.keypath.substr(0, lastDot),
+            index = event.keypath.substring(lastDot + 1);
 
-    //   callback({
-    //     tags: newTags
-    //   });
-    // });
+        GroupsDetails.splice(parent, index, 1);
+
+        _hasModifications();
+      }, 350);
+    });
+
+    GroupsDetails.on('togglePublicPermission', function(event) {
+      GroupsDetails.set(event.keypath + '.selected', !GroupsDetails.get(event.keypath + '.selected'));
+
+      _hasModifications();
+    });
+
+    GroupsService.onAsyncSafe('groupsDetailsController.beforeSave', function(args, callback) {
+      callback({
+        permissions: GroupsDetails.get('permissions')
+      });
+    });
 
     GroupsService.onSafe([
       'groupsDetailsController.selectMode',
@@ -178,6 +243,10 @@
     ].join(' '), _modeChanged);
 
     function _modeChanged() {
+      if (!GroupsDetails) {
+        return;
+      }
+
       var mode = GroupsService.mode();
 
       if (mode == GroupsService.MODES.NONE) {
@@ -190,8 +259,6 @@
           }
         });
       }
-
-      console.log('mode', mode);
 
       GroupsDetails.set('mode', mode);
       GroupsDetails.set('editMode', mode == GroupsService.MODES.EDIT || mode == GroupsService.MODES.CREATE);
@@ -209,28 +276,64 @@
     }
 
     function _groupChanged(args) {
-      if (!args || !args.group) {
+      if (!GroupsDetails || !args || !args.group) {
         return _resetView();
       }
 
-      if (GroupsDetails.get('group.id') != args.group.id) {
-        _resetTab();
-      }
+      if (args.group.id) {
+        if (GroupsDetails.get('group.id') != args.group.id) {
+          _resetTab();
 
-      args.group.permissions = [];
-      if (args.group.permissionsMembers) {
-        args.group.permissions = args.group.permissions.concat(args.group.permissionsMembers.map(function(permission) {
-          return permission.title;
-        }));
+          $RealTimeService.realtimeComponent('groupsDetailsController', {
+            name: 'groups-permissions:' + args.group.id,
+            update: function(event, args) {
+              if (!args) {
+                return;
+              }
+
+              GroupsDetails.set('permissionsOrigin', args.permissions);
+              GroupsDetails.set('permissions', $.extend(true, {}, args.permissions));
+            }
+          }, 'groups-permissions:' + args.group.id);
+        }
+        else {
+          GroupsDetails.set('permissions', $.extend(true, {}, GroupsDetails.get('permissionsOrigin')));
+        }
       }
-      if (args.group.permissionsLeaders) {
-        args.group.permissions = args.group.permissions.concat(args.group.permissionsLeaders.map(function(permission) {
-          return permission.title;
-        }));
+      else {
+        _resetTab();
+
+        $RealTimeService.unregisterComponent('groupsDetailsController');
+
+        GroupsDetails.set('permissions', {
+          canSeeGroups: [{
+            id: null,
+            name: null,
+            ownLeaders: true,
+            fixed: true
+          }, {
+            id: null,
+            name: null,
+            ownMembers: true,
+            fixed: true
+          }],
+          canSeeLeadersGroups: [{
+            id: null,
+            name: null,
+            ownLeaders: true,
+            fixed: true
+          }],
+          canSeeMembersGroups: [{
+            id: null,
+            name: null,
+            ownLeaders: true,
+            fixed: true
+          }]
+        });
+        GroupsDetails.set('permissionsOrigin', GroupsDetails.get('permissions'));
       }
 
       GroupsDetails.set('group', args.group);
-
       GroupsDetails.set('leadersUrl', '/groups/' + args.group.url + '/leaders');
       GroupsDetails.set('membersUrl', '/groups/' + args.group.url + '/' + (args.group.special == 'deactivated' ? 'deactivated' : 'members'));
       GroupsDetails.set('invitationsUrl', '/groups/' + args.group.url + '/invitations');
@@ -241,13 +344,17 @@
     GroupsService.onSafe('groupsDetailsController.groupChanged', _groupChanged);
 
     GroupsService.onAsyncSafe('groupsDetailsController.teardownGroup groupsDetailsController.teardown', function(args, callback) {
+      if (!GroupsDetails) {
+        return callback();
+      }
+
       GroupsDetails.teardown().then(callback);
     });
 
     GroupsDetails.on('teardown', function() {
       $Layout.off('rightContextOpened', _rightContextOpened);
-      GroupsDetails.teardown();
       GroupsDetails = null;
+      $RealTimeService.unregisterComponent('groupsDetailsController');
 
       setTimeout(function() {
         GroupsService.offNamespace('groupsDetailsController');

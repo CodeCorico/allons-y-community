@@ -20,12 +20,16 @@ module.exports = function() {
           _usersFound = null,
           _mode = this.MODES.NONE,
           _groupSelected = null,
-          _lastGroup = null;
+          _hasModifications = false,
+          _lastGroup = null,
+          _autocompleteNewGroupActive = false;
 
       this.openGroup = function(url, page) {
         if (_mode == _this.MODES.CREATE) {
           return _this.fire('openCreateGroup');
         }
+
+        page = page == 'edit' ? null : page;
 
         _this.fire('openGroup', {
           url: url,
@@ -167,6 +171,55 @@ module.exports = function() {
           _this.fire(groupUrl ? 'teardownGroups' : 'teardownGroup', null, fulfil);
         });
       };
+
+      this.exitConfirmation = function(confirmCallback, cancelCallback) {
+        _this.fire('exitConfirmation', {
+          confirmCallback: confirmCallback,
+          cancelCallback: cancelCallback
+        });
+      };
+
+      this.hasModifications = function(value) {
+        if (typeof value == 'boolean') {
+          _hasModifications = value;
+
+          _this.fire('hasModifications', value);
+
+          return _this;
+        }
+
+        return _hasModifications;
+      };
+
+      this.inEditUnsaved = function() {
+        return (_mode == _this.MODES.EDIT || _mode == _this.MODES.CREATE) && _this.hasModifications();
+      };
+
+      this.stopAutocompleteNewGroup = function() {
+        _autocompleteNewGroupActive = false;
+      };
+
+      this.autocompleteNewGroup = function(name, excludes, callback) {
+        _autocompleteNewGroupActive = true;
+
+        $socket.once('read(groups/groups.autocomplete)', function(args) {
+          if (!_autocompleteNewGroupActive) {
+            return;
+          }
+
+          callback(args.groups);
+        });
+
+        $socket.emit('call(groups/groups.autocomplete)', {
+          name: name,
+          excludes: excludes
+        });
+      };
+
+      this.onSafe('GroupsService.teardown', function() {
+        _mode = _this.MODES.NONE;
+        _hasModifications = null;
+      });
 
     })();
 

@@ -12,6 +12,64 @@ module.exports = [{
     GroupModel.groupsOpened($socket, $message.path);
   }
 }, {
+  event: 'create(groups/group)',
+  isMember: true,
+  controller: function($message, $socket, GroupModel) {
+    if (!this.validMessage($message, {
+      group: 'filled'
+    })) {
+      return;
+    }
+
+    GroupModel.createGroup($socket.user, $message.group, function(err, group) {
+      if (err) {
+        console.log(err);
+
+        return;
+      }
+
+      $socket.emit('read(groups/group.new)', {
+        url: group.url
+      });
+    });
+  }
+}, {
+  event: 'update(groups/group)',
+  isMember: true,
+  controller: function($message, $socket, GroupModel) {
+    if (!this.validMessage($message, {
+      group: 'filled'
+    })) {
+      return;
+    }
+
+    GroupModel.updateGroup($socket.user, $message.group);
+  }
+}, {
+  event: 'delete(groups/group)',
+  isMember: true,
+  controller: function($message, $socket, GroupModel) {
+    if (!this.validMessage($message, {
+      group: 'filled'
+    })) {
+      return;
+    }
+
+    GroupModel.deleteGroup($socket.user, $message.group.id, function(err, group) {
+      if (err) {
+        console.log(err);
+
+        return;
+      }
+
+      $socket.emit('read(groups/group.delete)', {
+        group: {
+          id: group.id
+        }
+      });
+    });
+  }
+}, {
   event: 'create(groups/group.invitation)',
   isMember: true,
   controller: function($allonsy, $socket, GroupModel, UserModel, $message) {

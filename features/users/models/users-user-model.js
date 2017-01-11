@@ -10,12 +10,14 @@ module.exports = function() {
           'members-signup': {
             title: 'Signup',
             description: 'Signup to the platform.',
-            isPublic: true
+            isPublic: true,
+            unknownsOnly: true
           },
           'members-signin': {
             title: 'Signin',
             description: 'Signin to the platform.',
-            isPublic: true
+            isPublic: true,
+            unknownsOnly: true
           },
           'members-access': {
             title: 'See the members profiles.',

@@ -22,7 +22,7 @@ module.exports = [{
     $Layout.selectApp('Groups', false);
 
     var GroupsService = null,
-        pages = ['leaders', 'members', 'deactivated', 'invitations'];
+        pages = ['leaders', 'members', 'deactivated', 'invitations', 'edit'];
 
     if ($context.params.page && pages.indexOf($context.params.page) < 0) {
       return window.page.redirect('/groups/' + $context.params.group);
@@ -31,6 +31,14 @@ module.exports = [{
     setTimeout(function() {
       require('/public/groups/groups-service.js')
         .then(function() {
+          return require('/public/dropzone/dropzone.css');
+        })
+        .then(function() {
+          return require('/public/vendor/dropzone.js');
+        })
+        .then(function() {
+          window.Dropzone.autoDiscover = false;
+
           GroupsService = DependencyInjection.injector.view.get('GroupsService');
 
           return GroupsService.init();
@@ -74,11 +82,40 @@ module.exports = [{
     });
   }],
 
-  exit: ['$next', function($next) {
+  exit: ['$next', '$Page', '$Layout', '$context', function($next, $Page, $Layout, $context) {
+    if (window.page.doNothing) {
+      window.page.doNothing = false;
+
+      return;
+    }
+
     require('/public/groups/groups-service.js').then(function() {
-      var pathnameSplitted = window.location.pathname.split('/');
+      var GroupsService = DependencyInjection.injector.view.get('GroupsService'),
+          pathname = window.location.pathname,
+          pathnameSplitted = window.location.pathname.split('/');
+
+      if (!window.page.forceRedirection && GroupsService.inEditUnsaved()) {
+        if (!pathnameSplitted || pathnameSplitted.length < 2 || pathnameSplitted[1] != 'groups') {
+          window.page.doNothing = true;
+        }
+
+        window.page.redirect($context.path);
+
+        GroupsService.exitConfirmation(function() {
+          window.page.doNothing = false;
+          window.page.forceRedirection = true;
+          window.page(pathname);
+        }, function() {
+          window.page.doNothing = false;
+        });
+
+        return;
+      }
 
       if (!pathnameSplitted || pathnameSplitted.length < 2 || pathnameSplitted[1] != 'groups') {
+        $Page.rightButtonRemove('groups-details');
+        $Layout.rightContext().closeIfGroupOpened('group-groups-details');
+
         return DependencyInjection.injector.view.get('GroupsService').teardown(null, $next);
       }
 

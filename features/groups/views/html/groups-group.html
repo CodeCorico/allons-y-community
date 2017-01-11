@@ -1,11 +1,62 @@
-<div class="groups-group">
+<div class="groups-group {{editMode ? 'edit' : ''}}">
   <rv-require name="pl-scrolls" src="/public/vendor/plumes/scrolls/pl-scrolls"></rv-require>
 
   <div class="pl-scrolls">
 
     <div class="header-bg" style="background-image: url('{{displayCover(group.coverLarge)}}');"></div>
 
-    <header>
+    <header class="{{editConfirm}}">
+      <div class="groups-group-edit-cover-upload {{changeCoverOpened ? 'opened' : ''}}">
+        <div class="groups-group-edit-cover-upload-content">
+          <form action="/upload" class="dropzone">
+            <div class="dz-message">
+              {{_('Drop a picture here or click to upload.')}}
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {{#if group.activeUserisLeader}}
+        {{#if editMode}}
+          <div class="groups-group-edit-cover" on-click="changeCover">
+            <i class="fa fa-picture-o"></i>
+          </div>
+        {{/if}}
+
+        <div class="groups-group-edit-bar-container">
+          <div class="groups-group-edit-bar {{editMode ? '' : 'show'}}">
+            <a href="{{url}}/edit">{{_('edit')}}</a>
+          </div>
+          <div class="groups-group-edit-bar {{editMode && !closeConfirm && !deleteConfirm ? 'show' : ''}}">
+            <span class="groups-group-editing">{{_('editing')}}</span>
+            <span on-click="saveGroup" class="save {{hasModifications ? 'can-save' : ''}} {{saving ? 'saving' : ''}}">
+              {{_(saving ? 'saving' : (hasModifications ? 'save' : 'saved'))}}
+            </span> |
+            <span on-click="cancelEditGroup" class="close {{saving ? 'close-disabled' : ''}}">
+              {{hasModifications ? _('cancel') : _('close')}}
+            </span>
+            {{#if mode == MODES.EDIT && !group.special}}
+             |
+            <span on-click="deleteGroup">{{_('delete')}}</span>
+            {{/if}}
+          </div>
+          <div class="groups-group-edit-bar {{editMode && closeConfirm ? 'show' : ''}}">
+            <span class="groups-group-editing">{{_('editing')}}</span>
+            <span class="text-only">{{_('You will lose your unsaved work:')}}</span>
+            <span class="confirm" on-click="cancelEditGroup" data-confirm="true">{{_('confirm')}}</span>
+            |
+            <span on-click="cancelAskCloseGroup">{{_('cancel')}}</span>
+          </div>
+          <div class="groups-group-edit-bar {{editMode && deleteConfirm ? 'show' : ''}}">
+            <span class="groups-group-editing">{{_('editing')}}</span>
+            <span class="text-only">{{_('This action cannot be undone:')}}</span>
+            <span class="confirm" on-click="deleteGroup" data-confirm="true">{{_('confirm')}}</span>
+            |
+            <span on-click="cancelDeleteGroup">{{_('cancel')}}</span>
+          </div>
+        </div>
+      {{/if}}
+
       <div class="row">
         {{#if editMode}}
           <div class="edit-name">
