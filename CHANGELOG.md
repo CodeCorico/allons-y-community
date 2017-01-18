@@ -1,3 +1,16 @@
+<a name="1.1.0"></a>
+# [1.1.0](https://github.com/CodeCorico/allons-y-community/compare/1.0.15...1.1.0) (2017-01-18)
+
+### Features
+* **groups:** move the members lists and permissions to a new right context [#16e27af](https://github.com/CodeCorico/allons-y-community/commit/16e27af)
+* **groups:** create/delete/update groups feature [#98a134e](https://github.com/CodeCorico/allons-y-community/commit/98a134e)
+* **groups:** flush permissions after update them [#e8a5e7f](https://github.com/CodeCorico/allons-y-community/commit/e8a5e7f)
+* **groups:** send notification on leaders when the permissions has changed [#c8587d1](https://github.com/CodeCorico/allons-y-community/commit/c8587d1)
+* **groups group model:** send a notification to the group's members [#57023de](https://github.com/CodeCorico/allons-y-community/commit/57023de)
+
+### Bug Fixes
+* **groups group event:** don't stop adding invitations for the special deactivated group [#d5fd1e3](https://github.com/CodeCorico/allons-y-community/commit/d5fd1e3)
+
 <a name="1.0.15"></a>
 # [1.0.15](https://github.com/CodeCorico/allons-y-community/compare/1.0.14...1.0.15) (2016-11-29)
 
