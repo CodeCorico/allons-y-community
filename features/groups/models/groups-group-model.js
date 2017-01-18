@@ -1517,12 +1517,35 @@ module.exports = function() {
                                   id: group.id
                                 })
                                 .exec(function(err) {
+                                  if (err) {
+                                    return callback(err);
+                                  }
+
                                   $allonsy.log('allons-y-community', 'groups:group-delete:' + group.id, {
                                     label: 'Delete group <span class="accent">[' + group.name + ']</span>',
                                     user: user && user.email || null
                                   });
 
-                                  callback(err, group);
+                                  UserModel.pushNotification(null, users.map(function(user) {
+                                    return user.id;
+                                  }), {
+                                    message: 'The <strong>' + group.name + '</strong> group has been deleted!',
+                                    content: [
+                                      '<strong>' + user.username + '</strong> ',
+                                      'has deleted the group ',
+                                      '<strong>' + group.name + '</strong>'
+                                    ].join(''),
+                                    picture: group.coverMini || '/public/groups/group-mini.png',
+                                    pushTitle: 'The ' + group.name + ' group has been deleted! - ' + process.env.BRAND,
+                                    pushContent: user.username + ' has deleted the group ' + group.name,
+                                    pushPicture: '/public/groups/group-notification.jpg',
+                                    eventName: 'url',
+                                    eventArgs: {
+                                      url: '/groups'
+                                    }
+                                  }, function() {
+                                    callback(null, group);
+                                  });
                                 });
                             });
                           });
