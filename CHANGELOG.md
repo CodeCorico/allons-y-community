@@ -1,3 +1,9 @@
+<a name="1.1.1"></a>
+# [1.1.1](https://github.com/CodeCorico/allons-y-community/compare/1.1.0...1.1.1) (2017-01-25)
+
+### Bug Fixes
+* **groups group:** display public permissions when creating a new one [#375754e](https://github.com/CodeCorico/allons-y-community/commit/375754e)
+
 <a name="1.1.0"></a>
 # [1.1.0](https://github.com/CodeCorico/allons-y-community/compare/1.0.15...1.1.0) (2017-01-18)
 
