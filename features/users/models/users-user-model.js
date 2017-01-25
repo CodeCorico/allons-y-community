@@ -20,7 +20,7 @@ module.exports = function() {
             unknownsOnly: true
           },
           'members-access': {
-            title: 'See the members profiles.',
+            title: 'See the members profiles',
             description: 'Can see the members profiles.',
             isPublic: true
           }

@@ -2,13 +2,10 @@
   'use strict';
 
   window.Ractive.controllerInjection('groups-details', [
-    '$RealTimeService',
-    '$BodyDataService', '$socket', '$Page', '$Layout', 'GroupsService', '$component', '$data', '$done',
+    '$RealTimeService', '$BodyDataService', '$socket', '$Page', '$Layout', 'GroupsService', '$component', '$data', '$done',
   function groupsDetailsController(
-    $RealTimeService,
-    $BodyDataService, $socket, $Page, $Layout, GroupsService, $component, $data, $done
+    $RealTimeService, $BodyDataService, $socket, $Page, $Layout, GroupsService, $component, $data, $done
   ) {
-
     var GroupsDetails = $component({
           data: $.extend(true, {
             tabs: [{
@@ -275,6 +272,16 @@
       _resetTab();
     }
 
+    function _hasPublicPermissionSelected(permissions) {
+      for (var i = 0; i < permissions.length; i++) {
+        if (permissions[i].selected) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
     function _groupChanged(args) {
       if (!GroupsDetails || !args || !args.group) {
         return _resetView();
@@ -291,6 +298,8 @@
                 return;
               }
 
+              args.permissions.hasPublicSelected = _hasPublicPermissionSelected(args.permissions.publicPermissions);
+
               GroupsDetails.set('permissionsOrigin', args.permissions);
               GroupsDetails.set('permissions', $.extend(true, {}, args.permissions));
             }
@@ -304,6 +313,12 @@
         _resetTab();
 
         $RealTimeService.unregisterComponent('groupsDetailsController');
+
+        $socket.once('read(groups/groups.publicPermissions)', function(args) {
+          GroupsDetails.set('permissions.publicPermissions', args.publicPermissions);
+        });
+
+        $socket.emit('call(groups/groups.publicPermissions)');
 
         GroupsDetails.set('permissions', {
           canSeeGroups: [{
@@ -330,6 +345,7 @@
             fixed: true
           }]
         });
+
         GroupsDetails.set('permissionsOrigin', GroupsDetails.get('permissions'));
       }
 

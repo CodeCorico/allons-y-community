@@ -288,7 +288,7 @@
           <p class="groups-details-permissions-checks-tip">{{_('Click to select/unselect permissions:')}}</p>
           {{/if}}
           <div class="groups-details-permissions groups-details-permissions-checks">
-            {{#if !permissions.publicPermissions.length}}
+            {{#if !editMode && !permissions.hasPublicSelected}}
               <span class="groups-details-permission-none">{{_('None.')}}</span>
             {{/if}}
             {{#permissions.publicPermissions}}

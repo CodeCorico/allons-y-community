@@ -594,4 +594,12 @@ module.exports = [{
 
       });
   }
+}, {
+  event: 'call(groups/groups.publicPermissions)',
+  isMember: true,
+  controller: function($socket, GroupModel) {
+    $socket.emit('read(groups/groups.publicPermissions)', {
+      publicPermissions: GroupModel.availablePublicPermissions($socket)
+    });
+  }
 }];

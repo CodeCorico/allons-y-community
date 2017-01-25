@@ -1311,20 +1311,22 @@ module.exports = function() {
           }
 
           var _this = this,
-              GroupModel = DependencyInjection.injector.model.get('GroupModel');
-
-          groupData.description = groupData.description || '';
-          groupData.cover = groupData.cover || null;
-          groupData.coverMini = groupData.coverMini || null;
-          groupData.coverThumb = groupData.coverThumb || null;
-          groupData.coverLarge = groupData.coverLarge || null;
-          groupData.search1 = groupData.name;
-          groupData.search3 = groupData.description;
-          groupData.createdAt = new Date();
-          groupData.updatedAt = groupData.createdAt;
+              GroupModel = DependencyInjection.injector.model.get('GroupModel'),
+              groupObject = {
+                name: groupData.name,
+                description: groupData.description || '',
+                cover: groupData.cover || null,
+                coverMini: groupData.coverMini || null,
+                coverThumb: groupData.coverThumb || null,
+                coverLarge: groupData.coverLarge || null,
+                search1: groupData.name,
+                search3: groupData.description,
+                createdAt: new Date(),
+                updatedAt: groupData.createdAt
+              };
 
           this
-            .create(groupData)
+            .create(groupObject)
             .exec(function(err, group) {
               if (err || !group) {
                 return callback(err || 'no group');
@@ -1838,6 +1840,28 @@ module.exports = function() {
           });
         },
 
+        availablePublicPermissions: function(socket) {
+          var permissions = [];
+
+          Object.keys(_permissions).forEach(function(permissionName) {
+            if (
+              !_permissions[permissionName].isPublic ||
+              (!socket.user.isMembersLeader && socket.user.permissionsPublic.indexOf(permissionName) < 0) ||
+              _permissions[permissionName].unknownsOnly
+            ) {
+              return;
+            }
+
+            permissions.push({
+              name: permissionName,
+              title: _permissions[permissionName].title,
+              description: _permissions[permissionName].description
+            });
+          });
+
+          return permissions;
+        },
+
         callGroupsPermissions: function($socket, eventName, args, callback) {
           if (!args || !args.length) {
             if (callback) {
@@ -2005,8 +2029,10 @@ module.exports = function() {
 
                   Object.keys(_permissions).forEach(function(permissionName) {
                     if (
+                      !_permissions[permissionName].isPublic ||
+                      resultForUser.publicPermissions[permissionName] ||
                       (_permissions[permissionName].unknownsOnly && (!group.special || group.special != 'unknowns')) ||
-                      (socket.user.permissionsPublic.indexOf(permissionName) < 0 || resultForUser.publicPermissions[permissionName])
+                      (!socket.user.isMembersLeader && socket.user.permissionsPublic.indexOf(permissionName) < 0)
                     ) {
                       return;
                     }
@@ -2018,9 +2044,11 @@ module.exports = function() {
                     };
                   });
 
-                  resultForUser.publicPermissions = Object.keys(resultForUser.publicPermissions).sort().map(function(permissionName) {
-                    return resultForUser.publicPermissions[permissionName];
-                  });
+                  resultForUser.publicPermissions = Object.keys(resultForUser.publicPermissions)
+                    .sort()
+                    .map(function(permissionName) {
+                      return resultForUser.publicPermissions[permissionName];
+                    });
 
                   $RealTimeService.fire(eventName, {
                     permissions: resultForUser
@@ -2446,6 +2474,7 @@ module.exports = function() {
               group.coverLarge = groupData.coverLarge || null;
               group.search1 = group.name;
               group.search3 = group.description;
+              group.updatedAt = new Date();
 
               _this.updatePermissions(user, group, groupData.permissions, function(err, permissionsUpdated) {
                 _this
@@ -2459,7 +2488,8 @@ module.exports = function() {
                     coverThumb: group.coverThumb,
                     coverLarge: group.coverLarge,
                     search1: group.search1,
-                    search3: group.search3
+                    search3: group.search3,
+                    updatedAt: group.updatedAt
                   })
                   .exec(function(err) {
                     if (err) {
