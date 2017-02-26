@@ -1314,6 +1314,7 @@ module.exports = function() {
               GroupModel = DependencyInjection.injector.model.get('GroupModel'),
               groupObject = {
                 name: groupData.name,
+                special: groupData.special || null,
                 description: groupData.description || '',
                 cover: groupData.cover || null,
                 coverMini: groupData.coverMini || null,
