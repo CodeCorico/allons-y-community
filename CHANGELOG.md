@@ -1,3 +1,9 @@
+<a name="1.1.2"></a>
+# [1.1.2](https://github.com/CodeCorico/allons-y-community/compare/1.1.1...1.1.2) (2017-02-26)
+
+### Bug Fixes
+* **groups groups model:** add missing "special" attribute when creating groups [#1bac24a](https://github.com/CodeCorico/allons-y-community/commit/1bac24a)
+
 <a name="1.1.1"></a>
 # [1.1.1](https://github.com/CodeCorico/allons-y-community/compare/1.1.0...1.1.1) (2017-01-25)
 
