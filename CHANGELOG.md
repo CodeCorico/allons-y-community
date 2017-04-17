@@ -1,3 +1,9 @@
+<a name="1.1.3"></a>
+# [1.1.3](https://github.com/CodeCorico/allons-y-community/compare/1.1.2...1.1.3) (2017-04-17)
+
+### Bug Fixes
+* **ui:** remove UI optional dependencies [#8784163](https://github.com/CodeCorico/allons-y-community/commit/8784163)
+
 <a name="1.1.2"></a>
 # [1.1.2](https://github.com/CodeCorico/allons-y-community/compare/1.1.1...1.1.2) (2017-02-26)
 
