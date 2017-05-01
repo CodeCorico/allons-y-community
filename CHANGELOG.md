@@ -1,3 +1,9 @@
+<a name="1.1.4"></a>
+# [1.1.4](https://github.com/CodeCorico/allons-y-community/compare/1.1.3...1.1.4) (2017-05-01)
+
+### Bug Fixes
+* **users user model:** add $RealTimeService hooks to avoid the direct dependency [#3646263](https://github.com/CodeCorico/allons-y-community/commit/3646263)
+
 <a name="1.1.3"></a>
 # [1.1.3](https://github.com/CodeCorico/allons-y-community/compare/1.1.2...1.1.3) (2017-04-17)
 
