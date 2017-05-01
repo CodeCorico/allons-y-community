@@ -205,6 +205,8 @@ module.exports = function() {
 
           $RealTimeService.registerEvents(REALTIME_EVENTS);
 
+          $RealTimeService.hooks.add('updateEvents', this.realtimeServiceUpdateEvents);
+
           EntityModel.registerSearchPublicData('user', this, this.searchPublicData);
 
           var WebLogModel = DependencyInjection.injector.model.get('WebLogModel', true);
@@ -241,6 +243,52 @@ module.exports = function() {
               _this.nowSearchQuery.apply(_this, arguments);
             });
           }
+        },
+
+        realtimeServiceUpdateEvents: function(args, callback) {
+          var _this = this;
+
+          this.fromSocket(args.socket, function(err, user) {
+            if (err) {
+              return;
+            }
+
+            _this.flushSocketPermissions(args.socket, user, callback);
+          });
+        },
+
+        flushSocketPermissions: function(socket, user, callback) {
+          socket.realTimeEvents = socket.realTimeEvents || [];
+
+          if (!user) {
+            var GroupModel = DependencyInjection.injector.service.get('GroupModel');
+
+            GroupModel.unknownPermissions(function(permissions) {
+              socket.realTimeEvents.forEach(function(event) {
+                event.hasPermission = true;
+
+                if (event.permissions) {
+                  for (var i = 0; i < event.permissions.length; i++) {
+                    if (permissions.permissions.indexOf(event.permissions[i]) < 0) {
+                      event.hasPermission = false;
+
+                      break;
+                    }
+                  }
+                }
+              });
+
+              callback();
+            });
+
+            return;
+          }
+
+          socket.realTimeEvents.forEach(function(event) {
+            event.hasPermission = !event.permissions || user.hasPermissions(event.permissions) || false;
+          });
+
+          callback();
         },
 
         nowSearchQuery: function(query, $socket, $message, callback) {
