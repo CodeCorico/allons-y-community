@@ -30,6 +30,12 @@
     "extend": "^3.0.0",
     "node-uuid": "^1.4.7",
     "request": "^2.78.0",
-    "web-push": "^2.2.0"
-  }
+    "web-push": "^2.2.0",
+    "snyk": "^1.82.1"
+  },
+  "scripts": {
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
+  },
+  "snyk": true
 }
